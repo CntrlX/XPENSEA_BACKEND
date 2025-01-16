@@ -11,6 +11,9 @@ const swaggerDefinition = {
   },
   servers: [
     {
+      url: `https://xpensea-backend-189792861103.us-central1.run.app/api/v1/`,
+    },
+    {
       url: `https://xpensea--backend-393541516579.asia-south1.run.app/api/v1/`,
     },
     {
