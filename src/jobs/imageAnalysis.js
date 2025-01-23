@@ -13,7 +13,7 @@ async function getImageData(url) {
         return Buffer.from(response.data, 'binary').toString('base64');  // Convert binary data to base64
     } catch (error) {
         console.error("Error fetching image data:", error);
-        throw new Error("Failed to fetch image data");
+        throw new Error(`Failed to fetch image data: ${error.message}`);
     }
 }
 
@@ -31,7 +31,6 @@ const taggingPrompt = ChatPromptTemplate.fromTemplate(
     `
 );
 
-
 // Define the Zod schema for structured output
 const expenseSchema = z.object({
     isExpenseBill: z.boolean().describe("Whether the image is an applicable expense bill it should be false if the image is not an paper expense bill"),
@@ -42,41 +41,43 @@ const expenseSchema = z.object({
 
 // Analyze the image using GPT-4 via LangChain
 async function analyzeImage(imageUrl) {
+    if (!imageUrl) {
+        throw new Error("Image URL is required");
+    }
+
     console.log("Starting analysis of image:", imageUrl);
 
-    const model = new ChatOpenAI({
-        temperature: 0,
-        modelName: 'gpt-4o',  // Use the GPT-4 Vision model for image analysis
-        apiKey: process.env.OPENAI_API_KEY,  // Ensure the API key is set in the environment variables
-    });
-
     try {
+        const model = new ChatOpenAI({
+            temperature: 0,
+            modelName: 'gpt-4-vision-preview',  // Correct model name for GPT-4 Vision
+            maxTokens: 1000,
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+
         // Fetch and convert the image to base64
         const base64Image = await getImageData(imageUrl);
         console.log("Image data prepared for analysis.");
 
         // Construct input content combining base64 image and extra details
         const inputContent = new HumanMessage({
-          content: [
-            {
-              type: 'text',
-              text: `Analyze the provided image and extract the following information, make sure that you don't hallucinate any information, if you are not sure about any information, you can leave it blank. if you are not sure if it is not an image of a paper bill then make the isExpenseBill false  \n\n1. "isExpenseBill": true or false - Whether the image is an applicable expense bill. \n2. "title": (string, optional) - Title for the expense bill. \n3. "category": (string, optional) - Category for the expense bill. \n4. "description": (string, optional) - Description of the expense bill. \n\nImage and additional details:`,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-                detail: 'high',
-              },
-            },
-          ],
+            content: [
+                {
+                    type: 'text',
+                    text: `Analyze the provided image and extract the following information, make sure that you don't hallucinate any information, if you are not sure about any information, you can leave it blank. if you are not sure if it is not an image of a paper bill then make the isExpenseBill false`,
+                },
+                {
+                    type: 'image_url',
+                    image_url: {
+                        url: `data:image/jpeg;base64,${base64Image}`,
+                        detail: 'high',
+                    },
+                },
+            ],
         });
-        console.log("Input content for LLM prepared:", inputContent);
 
         // Add Zod schema validation for structured output
-        const llmWithStructuredOutput = model.withStructuredOutput(expenseSchema, {
-            name: 'extractor',
-        });
+        const llmWithStructuredOutput = model.withStructuredOutput(expenseSchema);
 
         // Create a tagging chain by piping the prompt with structured output
         const taggingChain = taggingPrompt.pipe(llmWithStructuredOutput);
@@ -85,14 +86,15 @@ async function analyzeImage(imageUrl) {
         const response = await taggingChain.invoke({ input: inputContent });
         console.log("Response from LLM received:", response);
 
-        // Output the structured JSON response
-        console.log("Validated response data:", response);
+        if (!response) {
+            throw new Error("No response received from the model");
+        }
+
         return response;
     } catch (error) {
         console.error("Error during image analysis:", error);
-        throw new Error("Image analysis failed");
+        throw new Error(`Image analysis failed: ${error.message}`);
     }
 }
 
-// Exporting the function
 module.exports = analyzeImage;
