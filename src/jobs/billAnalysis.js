@@ -3,6 +3,7 @@ const Expense = require('../models/expenseModel');
 const { ChatPromptTemplate } = require('@langchain/core/prompts');
 const { ChatOpenAI } = require('@langchain/openai');
 const { z } = require('zod');
+const axios = require('axios');
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 console.log(process.env.test,'OpenAI API key', OPENAI_API_KEY);
@@ -67,18 +68,50 @@ const llmWithStructuredOutput = llm.withStructuredOutput(classificationSchema, {
 const taggingChain = taggingPrompt.pipe(llmWithStructuredOutput);
 
 async function createWorker() {
-  const worker = await Tesseract.createWorker();
-  await worker.load();
-  await worker.loadLanguage('eng');
-  await worker.initialize('eng');
-  return worker;
+  return await Tesseract.createWorker('eng');
 }
 
 async function getExpenseWithoutAIScore(id) {
   return await Expense.findOne({ _id: id, aiScore: { $exists: false } });
 }
 
+async function downloadImage(url) {
+  try {
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(response.data);
+    return buffer;
+  } catch (error) {
+    console.error('Error downloading image:', error);
+    throw new Error(`Failed to download image: ${error.message}`);
+  }
+}
+
+async function processImage(worker, imageUrl) {
+  try {
+    console.log('Processing image URL:', imageUrl ? imageUrl.substring(0, 100) + '...' : 'undefined');
+    let imageData;
+    
+    if (imageUrl.startsWith('data:')) {
+      console.log('Handling data URL...');
+      imageData = imageUrl;
+    } else {
+      console.log('Downloading image from URL...');
+      const buffer = await downloadImage(imageUrl);
+      imageData = buffer;
+    }
+
+    console.log('Image data prepared, starting recognition...');
+    const result = await worker.recognize(imageData);
+    console.log('Recognition completed');
+    return result;
+  } catch (error) {
+    console.error('Error processing image:', error);
+    throw new Error(`Failed to process image: ${error.message}`);
+  }
+}
+
 async function runOCR(id) {
+  let worker = null;
   try {
     const expense = await getExpenseWithoutAIScore(id);
     if (!expense) {
@@ -91,38 +124,61 @@ async function runOCR(id) {
       return;
     }
 
-    const worker = await createWorker();
+    worker = await createWorker();
     let ocrText = '';
+    expense.documentOcrText = [];
 
-    try {
-      console.log('Starting OCR for expense:', expense._id);
-      
-      // Process each image in the array
-      for (let i = 0; i < expense.image.length; i++) {
-        const { data: { text } } = await worker.recognize(expense.image[i]);
-        console.log(`Recognition result for expense ${expense._id}, image ${i + 1}:`, text);
-        expense.documentOcrText[i] = text; // Save concatenated OCR result
+    console.log('Starting OCR for expense:', expense._id);
+    
+    // Process each image in the array
+    for (let i = 0; i < expense.image.length; i++) {
+      try {
+        const result = await processImage(worker, expense.image[i]);
+        if (result && result.data && result.data.text) {
+          console.log(`Recognition result for expense ${expense._id}, image ${i + 1}:`, result.data.text);
+          expense.documentOcrText[i] = result.data.text;
+        } else {
+          console.log(`No text extracted from image ${i + 1}`);
+          expense.documentOcrText[i] = '';
+        }
+      } catch (error) {
+        console.error(`Error processing image ${i + 1}:`, error);
+        expense.documentOcrText[i] = '';
+        continue; // Continue with next image if one fails
       }
+    }
 
-      ocrText = expense.documentOcrText.join(' - next image - ');
+    ocrText = expense.documentOcrText.filter(text => text).join(' - next image - ');
 
-
+    if (ocrText.trim()) {
       const input = `This is a reimbursement expense. The name of the expense is ${expense.title}, the amount is ${expense.amount}, the date is ${expense.date}, the time is ${expense.time}, the category is ${expense.category}, the description is ${expense.description}, and the ocr data in the image is ${ocrText}. With maximum scrutiny based on the data in the image find the scores for authenticity, accuracy, compliance, completeness, and relevance of the expense. Strictly If the ocr data in the image does not represent any type of bill then the scores should be 0.`;
 
       const classificationResult = await taggingChain.invoke({ input });
-
-      // Update the expense with the classification result
       expense.aiScores = classificationResult;
-      await expense.save();
-
-      console.log('Processed values', classificationResult);
-    } catch (err) {
-      console.error('Error processing expense', expense._id, ':', err);
+    } else {
+      console.log('No text was extracted from any of the images');
+      expense.aiScores = {
+        authenticity: 0,
+        accuracy: 0,
+        compliance: 0,
+        completeness: 0,
+        relevance: 0
+      };
     }
 
-    await worker.terminate();
+    await expense.save();
+    console.log('Processed values', expense.aiScores);
+
   } catch (err) {
     console.error('Error in runOCR function:', err);
+  } finally {
+    if (worker) {
+      try {
+        await worker.terminate();
+      } catch (error) {
+        console.error('Error terminating worker:', error);
+      }
+    }
   }
 }
 
