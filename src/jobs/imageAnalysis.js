@@ -59,7 +59,7 @@ async function analyzeImage(imageUrl) {
         const base64Image = await getImageData(imageUrl);
         console.log("Image data prepared for analysis.");
 
-        // Construct input content combining base64 image and extra details
+        // Construct input content combining base64 image and extra detail
         const inputContent = new HumanMessage({
             content: [
                 {
