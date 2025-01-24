@@ -50,7 +50,7 @@ async function analyzeImage(imageUrl) {
     try {
         const model = new ChatOpenAI({
             temperature: 0,
-            modelName: 'gpt-4-vision-preview',  // Correct model name for GPT-4 Vision
+            modelName: 'gpt-4-vision-0125',  // Updated model name
             maxTokens: 1000,
             apiKey: process.env.OPENAI_API_KEY,
         });
