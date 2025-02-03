@@ -10,6 +10,7 @@ adminRoute.use(authVerify);
 adminRoute
   .route("/")
   .post(adminController.createAdmin)
+  .patch(adminController.changePassword)
   .get(adminController.getAdmin);
 
 adminRoute

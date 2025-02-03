@@ -225,6 +225,38 @@ exports.getAdmin = async (req, res) => {
   }
 };
 
+exports.changePassword = async (req, res) => {
+  try {
+    const id = req.userId;
+    if (!id) {
+      return responseHandler(res, 400, "Admin ID is required");
+    }
+    const findAdmin = await Admin.findById(id);
+    if (!findAdmin) {
+      return responseHandler(res, 404, "Admin not found");
+    }
+
+    const { oldPassword, newPassword } = req.body;
+    const isMatch = await comparePasswords(oldPassword, findAdmin.password);
+    if (!isMatch) {
+      return responseHandler(res, 400, "Old password is incorrect");
+    }
+    const hashedPassword = await hashPassword(newPassword);
+    const updateAdmin = await Admin.findByIdAndUpdate(
+      id,
+      { password: hashedPassword },
+      { new: true }
+    );
+    if (updateAdmin) {
+      return responseHandler(res, 200, "Password changed successfully");
+    } else {
+      return responseHandler(res, 400, "Password change failed");
+    }
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+  }
+};
+
 /* The `exports.getAdminById` function is responsible for retrieving a admin's information based on the
 provided ID. Here is a breakdown of what the function is doing: */
 exports.getAdminById = async (req, res) => {
