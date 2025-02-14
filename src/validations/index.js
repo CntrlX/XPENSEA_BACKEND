@@ -219,6 +219,7 @@ exports.updatePlanSchema = Joi.object({
 exports.createCompanySchema = Joi.object({
   name: Joi.string().required(),
   ownerEmail: Joi.string().required(),
+  address: Joi.string().required(),
   industry: Joi.string().required(),
   plan: Joi.string().required(),
 });
@@ -226,6 +227,7 @@ exports.createCompanySchema = Joi.object({
 exports.editCompanySchema = Joi.object({
   name: Joi.string(),
   ownerEmail: Joi.string(),
+  address: Joi.string(),
   industry: Joi.string(),
   plan: Joi.string(),
 });

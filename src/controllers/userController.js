@@ -15,6 +15,7 @@ const {
   createUserEventSchema,
   createUserEventEditSchema,
   createTransactionSchema,
+  createCompanySchema,
 } = require("../validations");
 const Problem = require("../models/problemModel");
 const Event = require("../models/eventModel");
@@ -32,7 +33,6 @@ const Payment = require("../models/paymentModel");
 const stripe = Stripe(process.env.STRIPE_SECRET);
 const path = require("path");
 const generateMail = require("../utils/generateMail");
-const baseUrl = `${req.protocol}://${req.get("host")}/api/v1`;
 
 /* The `exports.sendOtp` function is responsible for sending an OTP (One Time Password) to a user's
 mobile number for verification purposes. Here is a breakdown of what the function is doing: */
@@ -176,6 +176,7 @@ exports.createExpense = async (req, res) => {
       );
     }
     req.body.user = req.userId;
+    req.body.company = req.companyId;
     const newExpense = await Expense.create(req.body);
     if (newExpense) {
       await runOCR(newExpense._id);
@@ -226,6 +227,7 @@ exports.createReport = async (req, res) => {
     // Function to create a new report and send notification
     const createNewReport = async () => {
       req.body.user = req.userId;
+      req.body.company = req.companyId;
       const newReport = await Report.create(req.body);
       if (newReport) {
         const data = {
@@ -365,6 +367,10 @@ exports.listController = async (req, res) => {
     const filter = {
       user: req.userId,
     };
+
+    if (type !== "notifications") {
+      filter.company = req.companyId;
+    }
 
     if (type === "reports") {
       try {
@@ -865,6 +871,7 @@ exports.reportProblem = async (req, res) => {
       );
     }
     req.body.user = req.userId;
+    req.body.company = req.companyId;
     const report = Problem(req.body);
     if (!report) return responseHandler(res, 400, `Report creation failed`);
     return responseHandler(res, 200, "Reported added successfully");
@@ -890,7 +897,7 @@ exports.createEvent = async (req, res) => {
     req.body.type = "User";
     req.body.creator = req.userId;
     req.body.staffs = [req.userId];
-    req.body.company = req.companyId
+    req.body.company = req.companyId;
     const newEvent = await Event.create(req.body);
     if (newEvent) {
       return responseHandler(
@@ -1320,7 +1327,7 @@ exports.imageAnalysis = async (req, res) => {
 
 exports.createtransaction = async (req, res) => {
   try {
-    const transactionData = req.body;
+    let transactionData = req.body;
 
     // Validate input data (Assuming you have a validation schema)
     const validation = createTransactionSchema.validate(transactionData, {
@@ -1338,6 +1345,7 @@ exports.createtransaction = async (req, res) => {
     }
 
     // Create the advance payment record
+    transactionData.company = req.companyId;
     const newtransaction = await transaction.create(transactionData);
 
     if (newtransaction) {
@@ -1509,8 +1517,11 @@ exports.registerCompany = async (req, res) => {
         `Invalid input: ${createCompanyValidator.error}`
       );
     }
-    const newCompany = await Company.create(req.body).populate("plan");
+    const newCompany = new Company(req.body);
+    await newCompany.save();
+    await newCompany.populate("plan");
     if (newCompany) {
+      const baseUrl = `${req.protocol}://${req.get("host")}/api/v1`;
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -1521,12 +1532,15 @@ exports.registerCompany = async (req, res) => {
                 name: newCompany.plan.name,
                 description: `Access to ${newCompany.plan.name} plan`,
               },
-              unit_amount: newCompany.plan.price * 100,
+              unit_amount: Number(newCompany.plan.price) * 100,
             },
             quantity: 1,
           },
         ],
         mode: "payment",
+        customer_email: newCompany.ownerEmail, 
+        billing_address_collection: "required",
+        customer_creation: "always",
         success_url: `${baseUrl}/user/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/user/payment/failure?session_id={CHECKOUT_SESSION_ID}`,
       });
@@ -1536,10 +1550,11 @@ exports.registerCompany = async (req, res) => {
       session.success_url = successUrl;
       session.cancel_url = cancelUrl;
 
+      const dateRandom = new Date().getTime();
       const paymentData = {
         company: newCompany._id,
         gatewayId: session.id,
-        amount: 10,
+        amount: newCompany.plan.price,
         currency: "INR",
         status: "created",
         receipt: `order_id${dateRandom}`,
@@ -1581,7 +1596,7 @@ exports.successPayment = async (req, res) => {
       { status: true },
       { new: true }
     );
-    res.sendFile(path.join(__dirname, "../../views/success.html"));
+    res.sendFile(path.join(__dirname, "../views/success.html"));
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }
@@ -1597,7 +1612,7 @@ exports.failurePayment = async (req, res) => {
       },
       { new: true }
     );
-    res.sendFile(path.join(__dirname, "../../views/cancel.html"));
+    res.sendFile(path.join(__dirname, "../views/cancel.html"));
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }

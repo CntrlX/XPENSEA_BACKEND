@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const deductionSchema = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -23,7 +27,7 @@ const deductionSchema = mongoose.Schema(
     mode: {
       type: String,
       enum: ["wallet", "bank"],
-    }
+    },
   },
   { timestamps: true }
 );

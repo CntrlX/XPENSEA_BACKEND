@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const problemSchema = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     description: { type: String },
     user: {
       type: mongoose.Schema.Types.ObjectId,

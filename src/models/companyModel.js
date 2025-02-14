@@ -8,6 +8,7 @@ const companySchema = new mongoose.Schema(
       trim: true,
     },
     industry: { type: String, trim: true },
+    address: { type: String, trim: true },
     plan: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Plan",

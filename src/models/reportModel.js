@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const reportModel = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     reportId: { type: String },
     title: { type: String },
     reportDate: { type: Date },

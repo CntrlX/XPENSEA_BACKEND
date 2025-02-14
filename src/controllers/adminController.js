@@ -101,8 +101,8 @@ exports.createAdmin = async (req, res) => {
 
     const hashedPassword = await hashPassword(req.body.password);
     req.body.password = hashedPassword;
-    if(req.body.company){
-      req.body.company = req.companyId
+    if (req.body.company) {
+      req.body.company = req.companyId;
     }
 
     const newAdmin = await Admin.create(req.body);
@@ -456,6 +456,22 @@ exports.listController = async (req, res) => {
       policy: "policyManagement_view",
     };
 
+    if (
+      req.roleId !== "666c1a3895a6b176b7f2bcf7" &&
+      [
+        "admins",
+        "users",
+        "events",
+        "tiers",
+        "roles",
+        "approvals",
+        "finances",
+        "transactions",
+      ].includes(type)
+    ) {
+      filter.company = req.companyId;
+    }
+
     if (type === "admins") {
       const check = await checkAccess(req.roleId, "permissions");
 
@@ -725,6 +741,10 @@ exports.listController = async (req, res) => {
         userType: "approver",
       };
 
+      if (req.roleId !== "666c1a3895a6b176b7f2bcf7") {
+        filter.company = req.companyId;
+      }
+
       const tier = req.query.tier;
 
       if (!tier) {
@@ -895,6 +915,10 @@ exports.listController = async (req, res) => {
         filter.location = req.query.location;
       }
 
+      if (req.roleId !== "666c1a3895a6b176b7f2bcf7") {
+        filter.company = req.companyId;
+      }
+
       // Count total matching policy documents
       const totalCount = await Policy.countDocuments(filter);
 
@@ -959,7 +983,7 @@ exports.createTier = async (req, res) => {
         `Invalid input: ${createTierValidator.error}`
       );
     }
-    req.body.company = req.companyId
+    req.body.company = req.companyId;
     const createTier = await Tier.create(req.body);
     if (createTier) {
       return responseHandler(
@@ -1129,7 +1153,7 @@ exports.createUser = async (req, res) => {
         `User with email ${req.body.email} already exists`
       );
     }
-    req.body.company = req.companyId
+    req.body.company = req.companyId;
     const createUser = await User.create(req.body);
     if (createUser) {
       return responseHandler(
@@ -1284,7 +1308,7 @@ exports.createEvent = async (req, res) => {
     }
     req.body.type = "Admin";
     req.body.creator = req.userId;
-    req.body.company = req.companyId
+    req.body.company = req.companyId;
     const newEvent = await Event.create(req.body);
     if (newEvent) {
       return responseHandler(
@@ -1896,7 +1920,7 @@ exports.getFinance = async (req, res) => {
 
 exports.createtransaction = async (req, res) => {
   try {
-    const transactionData = req.body;
+    let transactionData = req.body;
 
     // Validate input data (Assuming you have a validation schema)
     const validation = createTransactionSchema.validate(transactionData, {
@@ -1914,6 +1938,7 @@ exports.createtransaction = async (req, res) => {
     }
 
     // Create the advance payment record
+    transactionData.company = req.companyId;
     const newtransaction = await transaction.create(transactionData);
 
     if (newtransaction) {

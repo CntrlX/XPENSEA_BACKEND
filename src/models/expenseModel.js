@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 //test
 const expenseSchema = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     title: { type: String },
     amount: { type: Number },
     date: { type: Date },
@@ -10,8 +14,8 @@ const expenseSchema = mongoose.Schema(
     address: { type: String },
     category: { type: String },
     description: { type: String },
-    image: [{ type: String }], // TODO: change name as document 
-    documentOcrText: [{ type: String }], 
+    image: [{ type: String }], // TODO: change name as document
+    documentOcrText: [{ type: String }],
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

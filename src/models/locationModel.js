@@ -1,13 +1,17 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const LocationSchema = new mongoose.Schema({
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+  },
   eventName: {
     type: String,
     required: true,
   },
   eventId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Event',
+    ref: "Event",
     required: false,
   },
   location: {
@@ -20,11 +24,11 @@ const LocationSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
 });
 
-const Location = mongoose.model('Location', LocationSchema);
+const Location = mongoose.model("Location", LocationSchema);
 
 module.exports = Location;
