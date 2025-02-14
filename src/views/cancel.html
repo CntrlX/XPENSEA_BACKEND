@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Cancelled</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #f8e2e2, #f4a2a2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        color: #333;
+        text-align: center;
+        padding: 10px;
+      }
+      .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+        width: 100%;
+        max-width: 400px;
+        margin: auto;
+        animation: slide-down 0.5s ease-out;
+      }
+      @keyframes slide-down {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      h1 {
+        color: #d9534f;
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+      p {
+        font-size: 16px;
+        color: #555;
+      }
+      .cancel-icon {
+        font-size: 50px;
+        color: #d9534f;
+        margin-bottom: 20px;
+      }
+      button {
+        background-color: #d9534f;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        width: 100%;
+      }
+      button:hover {
+        background-color: #c9302c;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="cancel-icon">❌</div>
+      <h1>Payment Cancelled</h1>
+      <p>Your payment was cancelled. Please try again.</p>
+    </div>
+  </body>
+</html>

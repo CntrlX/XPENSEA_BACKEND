@@ -16,6 +16,17 @@ const {
 } = require("./src/swagger/swagger");
 
 const app = express();
+
+app.use(express.static("views"));
+
+app.get("/success", (req, res) => {
+  res.sendFile(__dirname + "/views/success.html");
+});
+
+app.get("/cancel", (req, res) => {
+  res.sendFile(__dirname + "/views/cancel.html");
+});
+
 app.use(volleyball);
 
 const NODE_ENV = process.env.NODE_ENV;

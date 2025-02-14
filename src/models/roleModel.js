@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const roleSchema = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     roleName: { type: String },
     permissions: [{ type: String }],
     locationAccess: [{ type: String }],

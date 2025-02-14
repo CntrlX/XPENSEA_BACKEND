@@ -1,12 +1,16 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const policySchema = new mongoose.Schema({
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+  },
   policyTitle: {
     type: String,
     required: true,
   },
   tier: {
-    type:  mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Tier",
     required: true,
   },
@@ -47,6 +51,6 @@ const policySchema = new mongoose.Schema({
   },
 });
 
-const Policy = mongoose.model('Policy', policySchema);
+const Policy = mongoose.model("Policy", policySchema);
 
 module.exports = Policy;

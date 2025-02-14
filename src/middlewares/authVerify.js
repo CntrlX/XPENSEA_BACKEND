@@ -16,6 +16,7 @@ const authVerify = (req, res, next) => {
     }
     req.userId = decoded.payload.userId;
     req.roleId = decoded.payload.roleId;
+    req.comapnyId = decoded.payload.comapnyId;
     return next();
   });
 };

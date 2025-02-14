@@ -74,4 +74,16 @@ adminRoute.get("/approvers", adminController.getApprovers);
 adminRoute.get("/dashboard", adminController.getDashboard);
 adminRoute.post("/deduct", adminController.deductWallet);
 
+// Plan Routes
+adminRoute
+  .route("/plan")
+  .post(adminController.createPlan)
+  .get(adminController.getPlans);
+
+adminRoute
+  .route("/plan/:id")
+  .get(adminController.getPlanById)
+  .put(adminController.updatePlan)
+  .delete(adminController.deletePlan);
+
 module.exports = adminRoute;

@@ -26,6 +26,13 @@ const Policy = require("../models/policyModel");
 const Deduction = require("../models/deductionModel");
 const Location = require("../models/locationModel");
 const sendMail = require("../utils/sendMail");
+const Company = require("../models/companyModel");
+const Stripe = require("stripe");
+const Payment = require("../models/paymentModel");
+const stripe = Stripe(process.env.STRIPE_SECRET);
+const path = require("path");
+const generateMail = require("../utils/generateMail");
+const baseUrl = `${req.protocol}://${req.get("host")}/api/v1`;
 
 /* The `exports.sendOtp` function is responsible for sending an OTP (One Time Password) to a user's
 mobile number for verification purposes. Here is a breakdown of what the function is doing: */
@@ -107,7 +114,7 @@ exports.mpinHandler = async (req, res) => {
         return responseHandler(res, 401, "Invalid MPIN");
       }
 
-      const token = generateToken(user._id, user.userType);
+      const token = generateToken(user._id, user.userType, user.company);
       return responseHandler(res, 200, "Login successfull..!", {
         _id: user._id,
         token,
@@ -363,7 +370,7 @@ exports.listController = async (req, res) => {
       try {
         // Count total number of documents
         const totalCount = await Report.countDocuments(filter);
-      
+
         // Fetch reports with expenses populated
         const fetchReports = await Report.find(filter)
           .populate({
@@ -374,22 +381,22 @@ exports.listController = async (req, res) => {
           .limit(10)
           .sort({ createdAt: -1 })
           .lean();
-      
+
         // Check if reports were found
         if (!fetchReports || fetchReports.length === 0) {
           return responseHandler(res, 200, "No Reports found", [], totalCount);
         }
-      
+
         // Use Promise.all to handle async map operations
         const mappedData = await Promise.all(
           fetchReports.map(async (item) => {
             if (!item) {
               throw new Error("Report item is undefined.");
             }
-      
+
             let isEvent = false;
             let eventType = null;
-      
+
             // Check if there's an associated event
             if (item.event) {
               const eventDetails = await Event.findOne({ _id: item.event });
@@ -398,13 +405,13 @@ exports.listController = async (req, res) => {
               }
               isEvent = true;
             }
-      
+
             // Calculate the total expense amount
             const totalAmount = item.expenses.reduce(
               (acc, exp) => acc + exp.amount,
               0
             );
-      
+
             // Return the processed data for each report
             return {
               _id: item._id,
@@ -418,14 +425,21 @@ exports.listController = async (req, res) => {
             };
           })
         );
-      
+
         // Return the response with the processed data and total count
-        return responseHandler(res, 200, "Reports found", mappedData, totalCount);
+        return responseHandler(
+          res,
+          200,
+          "Reports found",
+          mappedData,
+          totalCount
+        );
       } catch (error) {
         console.error("Error fetching reports:", error.message);
-        return responseHandler(res, 500, "Internal Server Error", [error.message]);
+        return responseHandler(res, 500, "Internal Server Error", [
+          error.message,
+        ]);
       }
-      
     } else if (type === "expenses") {
       const totalCount = await Expense.countDocuments(filter);
       const fetchExpenses = await Expense.find(filter)
@@ -876,6 +890,7 @@ exports.createEvent = async (req, res) => {
     req.body.type = "User";
     req.body.creator = req.userId;
     req.body.staffs = [req.userId];
+    req.body.company = req.companyId
     const newEvent = await Event.create(req.body);
     if (newEvent) {
       return responseHandler(
@@ -1479,6 +1494,112 @@ exports.saveLocation = async (req, res) => {
     return responseHandler(res, 200, "Location saved successfully");
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+  }
+};
+
+exports.registerCompany = async (req, res) => {
+  try {
+    const createCompanyValidator = createCompanySchema.validate(req.body, {
+      abortEarly: true,
+    });
+    if (createCompanyValidator.error) {
+      return responseHandler(
+        res,
+        400,
+        `Invalid input: ${createCompanyValidator.error}`
+      );
+    }
+    const newCompany = await Company.create(req.body).populate("plan");
+    if (newCompany) {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "inr",
+              product_data: {
+                name: newCompany.plan.name,
+                description: `Access to ${newCompany.plan.name} plan`,
+              },
+              unit_amount: newCompany.plan.price * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${baseUrl}/user/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/user/payment/failure?session_id={CHECKOUT_SESSION_ID}`,
+      });
+
+      const successUrl = `${baseUrl}/user/payment/success?session_id=${session.id}`;
+      const cancelUrl = `${baseUrl}/user/payment/failure?session_id=${session.id}`;
+      session.success_url = successUrl;
+      session.cancel_url = cancelUrl;
+
+      const paymentData = {
+        company: newCompany._id,
+        gatewayId: session.id,
+        amount: 10,
+        currency: "INR",
+        status: "created",
+        receipt: `order_id${dateRandom}`,
+      };
+
+      await Payment.create(paymentData);
+      await generateMail({
+        to: `info@xpensea.com`,
+        subject: "New Company Registration",
+        text: `New company ${newCompany.name} has been registered.`,
+      });
+      return responseHandler(
+        res,
+        200,
+        `Company created successfully..!`,
+        session.url
+      );
+    } else {
+      return responseHandler(res, 400, `Company creation failed...!`);
+    }
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+  }
+};
+
+exports.successPayment = async (req, res) => {
+  try {
+    const sessionId = req.query.session_id;
+    const updatePayment = await Payment.findOneAndUpdate(
+      { gatewayId: sessionId },
+      {
+        status: "completed",
+      },
+      { new: true }
+    );
+
+    await Company.findByIdAndUpdate(
+      updatePayment.company,
+      { status: true },
+      { new: true }
+    );
+    res.sendFile(path.join(__dirname, "../../views/success.html"));
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+exports.failurePayment = async (req, res) => {
+  try {
+    const sessionId = req.query.session_id;
+    await Payment.findOneAndUpdate(
+      { gatewayId: sessionId },
+      {
+        status: "failed",
+      },
+      { new: true }
+    );
+    res.sendFile(path.join(__dirname, "../../views/cancel.html"));
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }
 };
 

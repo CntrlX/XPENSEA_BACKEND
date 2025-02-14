@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const eventSchema = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     eventName: { type: String },
     days: { type: Number },
     startDate: { type: Date },
@@ -27,7 +31,7 @@ const eventSchema = mongoose.Schema(
     },
     creator: {
       type: mongoose.Schema.Types.ObjectId,
-      refPath: 'type'
+      refPath: "type",
     },
   },
   { timestamps: true }

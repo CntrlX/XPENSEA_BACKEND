@@ -25,12 +25,17 @@ const {
   createPolicySchema,
   createTransactionSchema,
   createDeductionSchema,
+  createPlanSchema,
+  updatePlanSchema,
 } = require("../validations");
 const moment = require("moment-timezone");
 const Report = require("../models/reportModel");
 const Expense = require("../models/expenseModel");
 const Notification = require("../models/notificationModel");
 const Deduction = require("../models/deductionModel");
+const Plan = require("../models/planModel");
+const generateMail = require("../utils/generateMail");
+const { text } = require("express");
 
 exports.loginAdmin = async (req, res) => {
   try {
@@ -52,7 +57,11 @@ exports.loginAdmin = async (req, res) => {
       return responseHandler(res, 401, "Invalid password");
     }
 
-    const token = generateToken(findAdmin._id, findAdmin.role);
+    const token = generateToken(
+      findAdmin._id,
+      findAdmin.role,
+      findAdmin.company
+    );
 
     return responseHandler(res, 200, "Login successfull", token);
   } catch (error) {
@@ -92,10 +101,23 @@ exports.createAdmin = async (req, res) => {
 
     const hashedPassword = await hashPassword(req.body.password);
     req.body.password = hashedPassword;
+    if(req.body.company){
+      req.body.company = req.companyId
+    }
 
     const newAdmin = await Admin.create(req.body);
 
     if (newAdmin) {
+      await generateMail({
+        to: newAdmin.email,
+        subject: "Welcome to Admin Panel",
+        text: `Hi ${newAdmin.name},\n
+        Welcome to Admin Panel.\n
+        Your account has been created successfully.\n
+        Username: ${newAdmin.email}\n
+        Password: ${req.body.password}\n
+        Login to your account and start managing your expenses and reports.`,
+      });
       return responseHandler(
         res,
         201,
@@ -293,6 +315,7 @@ exports.createRole = async (req, res) => {
         `Invalid input: ${createRoleValidator.error}`
       );
     }
+    req.body.company = req.companyId;
     const newRole = await Role.create(req.body);
     if (!newRole) {
       return responseHandler(res, 400, `Role creation failed...!`);
@@ -936,6 +959,7 @@ exports.createTier = async (req, res) => {
         `Invalid input: ${createTierValidator.error}`
       );
     }
+    req.body.company = req.companyId
     const createTier = await Tier.create(req.body);
     if (createTier) {
       return responseHandler(
@@ -1105,6 +1129,7 @@ exports.createUser = async (req, res) => {
         `User with email ${req.body.email} already exists`
       );
     }
+    req.body.company = req.companyId
     const createUser = await User.create(req.body);
     if (createUser) {
       return responseHandler(
@@ -1259,6 +1284,7 @@ exports.createEvent = async (req, res) => {
     }
     req.body.type = "Admin";
     req.body.creator = req.userId;
+    req.body.company = req.companyId
     const newEvent = await Event.create(req.body);
     if (newEvent) {
       return responseHandler(
@@ -2063,6 +2089,7 @@ exports.createPolicy = async (req, res) => {
     }
 
     // Create the policy record
+    req.body.companyId = req.companyId;
     const newPolicy = await Policy.create(policyData);
 
     if (newPolicy) {
@@ -2353,6 +2380,133 @@ exports.deductWallet = async (req, res) => {
     const deduction = await Deduction.create(req.body);
     if (!deduction) return responseHandler(res, 400, "Deduction failed");
     return responseHandler(res, 200, "Deduction successful", deduction);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+exports.createPlan = async (req, res) => {
+  try {
+    const createPlanValidator = createPlanSchema.validate(req.body, {
+      abortEarly: true,
+    });
+    if (createPlanValidator.error) {
+      return responseHandler(
+        res,
+        400,
+        `Invalid input: ${createPlanValidator.error}`
+      );
+    }
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("planManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+    const newPlan = await Plan.create(req.body);
+    if (!newPlan) {
+      return responseHandler(res, 400, `Plan creation failed...!`);
+    }
+    return responseHandler(
+      res,
+      201,
+      `New Plan created successfull..!`,
+      newPlan
+    );
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+  }
+};
+
+exports.getPlans = async (req, res) => {
+  try {
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("planManagement_view")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+    const plans = await Plan.find({ status: true });
+    return responseHandler(res, 200, "Plans retrieved successfully", plans);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+exports.getPlanById = async (req, res) => {
+  try {
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("planManagement_view")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+    const { id } = req.params;
+    const plan = await Plan.findById(id);
+    if (!plan) {
+      return responseHandler(res, 404, "Plan not found");
+    }
+    return responseHandler(res, 200, "Plan retrieved successfully", plan);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+exports.updatePlan = async (req, res) => {
+  try {
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("planManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+    const { id } = req.params;
+    const updatePlanValidator = updatePlanSchema.validate(req.body, {
+      abortEarly: true,
+    });
+    if (updatePlanValidator.error) {
+      return responseHandler(
+        res,
+        400,
+        `Invalid input: ${updatePlanValidator.error}`
+      );
+    }
+    const updatedPlan = await Plan.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+    if (!updatedPlan) {
+      return responseHandler(res, 400, "Plan update failed");
+    }
+    return responseHandler(res, 200, "Plan updated successfully", updatedPlan);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+exports.deletePlan = async (req, res) => {
+  try {
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("planManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+    const { id } = req.params;
+    const deletedPlan = await Plan.findByIdAndDelete(id);
+    if (!deletedPlan) {
+      return responseHandler(res, 400, "Plan deletion failed");
+    }
+    return responseHandler(res, 200, "Plan deleted successfully", deletedPlan);
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }

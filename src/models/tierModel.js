@@ -14,6 +14,10 @@ const subSchema = new mongoose.Schema({
 
 const tierSchema = mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
     title: { type: String },
     activationDate: { type: Date },
     categories: [subSchema],

@@ -7,6 +7,7 @@ exports.createAdminSchema = Joi.object({
   mobile: Joi.string().required(),
   password: Joi.string().required(),
   role: Joi.string().required(),
+  company: Joi.string().required(),
   status: Joi.boolean(),
 });
 
@@ -16,6 +17,7 @@ exports.editAdminSchema = Joi.object({
   email: Joi.string(),
   mobile: Joi.string(),
   role: Joi.string(),
+  company: Joi.string(),
   status: Joi.boolean(),
 });
 
@@ -199,6 +201,34 @@ exports.createDeductionSchema = Joi.object({
   report: Joi.string().required(),
 });
 
+exports.createPlanSchema = Joi.object({
+  name: Joi.string().required(),
+  price: Joi.number().required(),
+  maxUsers: Joi.number().required(),
+  features: Joi.array().required(),
+});
+
+exports.updatePlanSchema = Joi.object({
+  name: Joi.string(),
+  price: Joi.number(),
+  maxUsers: Joi.number(),
+  features: Joi.array(),
+  status: Joi.boolean(),
+});
+
+exports.createCompanySchema = Joi.object({
+  name: Joi.string().required(),
+  ownerEmail: Joi.string().required(),
+  industry: Joi.string().required(),
+  plan: Joi.string().required(),
+});
+
+exports.editCompanySchema = Joi.object({
+  name: Joi.string(),
+  ownerEmail: Joi.string(),
+  industry: Joi.string(),
+  plan: Joi.string(),
+});
 
 //nodemailer code
 
