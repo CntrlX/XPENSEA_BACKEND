@@ -101,9 +101,7 @@ exports.createAdmin = async (req, res) => {
 
     const hashedPassword = await hashPassword(req.body.password);
     req.body.password = hashedPassword;
-    if (req.body.company) {
-      req.body.company = req.companyId;
-    }
+    req.body.company = req.companyId;
 
     const newAdmin = await Admin.create(req.body);
 
@@ -457,7 +455,6 @@ exports.listController = async (req, res) => {
     };
 
     if (
-      req.roleId !== "666c1a3895a6b176b7f2bcf7" &&
       [
         "admins",
         "users",
@@ -741,9 +738,7 @@ exports.listController = async (req, res) => {
         userType: "approver",
       };
 
-      if (req.roleId !== "666c1a3895a6b176b7f2bcf7") {
-        filter.company = req.companyId;
-      }
+      filter.company = req.companyId;
 
       const tier = req.query.tier;
 
@@ -915,9 +910,7 @@ exports.listController = async (req, res) => {
         filter.location = req.query.location;
       }
 
-      if (req.roleId !== "666c1a3895a6b176b7f2bcf7") {
-        filter.company = req.companyId;
-      }
+      filter.company = req.companyId;
 
       // Count total matching policy documents
       const totalCount = await Policy.countDocuments(filter);
@@ -1795,6 +1788,8 @@ exports.getFilteredUsers = async (req, res) => {
       );
     }
 
+    filter.company = req.companyId;
+
     const fetchUsers = await User.find(filter).populate("tier").lean();
 
     if (!fetchUsers) {
@@ -1973,6 +1968,7 @@ exports.viewTransactionsAndDeductions = async (req, res) => {
 
     // Fetch transactions if type is not 'debit'
     if (!type || type === "credit") {
+      filter.company = req.companyId;
       transactions = await transaction
         .find(filter)
         .populate("requestedBy.sender requestedBy.receiver paidBy", "name");
@@ -1980,6 +1976,7 @@ exports.viewTransactionsAndDeductions = async (req, res) => {
 
     // Fetch deductions if type is not 'credit'
     if (!type || type === "debit") {
+      query.company = req.companyId;
       deductions = await Deduction.find(query).populate(
         "user deductBy report",
         "name"
@@ -2282,7 +2279,11 @@ exports.getApprovers = async (req, res) => {
         "You don't have permission to perform this action"
       );
     }
-    const approvers = await User.find({ userType: "approver" });
+    const filter = {
+      userType: "approver",
+      company: req.companyId,
+    };
+    const approvers = await User.find(filter);
     return responseHandler(
       res,
       200,
@@ -2303,6 +2304,7 @@ exports.getDashboard = async (req, res) => {
         $match: {
           createdAt: { $gte: start, $lte: end },
           status: "approved",
+          company: req.companyId,
         },
       },
       {
@@ -2342,7 +2344,7 @@ exports.getDashboard = async (req, res) => {
       { $limit: 5 },
     ]);
 
-    const pending = await Report.find({ status: "pending" })
+    const pending = await Report.find({ status: "pending", company: req.companyId })
       .populate("expenses")
       .limit(3)
       .sort({ reportDate: -1 });
@@ -2384,12 +2386,14 @@ exports.deductWallet = async (req, res) => {
     const totalAmountInWallet = await transaction.find({
       "requestedBy.receiver": report.user,
       status: "completed",
+      company: req.companyId,
     });
 
     const deductAmountFromWallet = await Deduction.find({
       user: report.user,
       mode: "wallet",
       status: true,
+      company: req.companyId,
     });
 
     const currentAmountInWallet =
@@ -2402,6 +2406,7 @@ exports.deductWallet = async (req, res) => {
     req.body.deductBy = req.userId;
     req.body.deductOn = new Date();
     req.body.mode = "wallet";
+    req.body.company = req.companyId;
     const deduction = await Deduction.create(req.body);
     if (!deduction) return responseHandler(res, 400, "Deduction failed");
     return responseHandler(res, 200, "Deduction successful", deduction);
@@ -2447,14 +2452,6 @@ exports.createPlan = async (req, res) => {
 
 exports.getPlans = async (req, res) => {
   try {
-    const check = await checkAccess(req.roleId, "permissions");
-    if (!check || !check.includes("planManagement_view")) {
-      return responseHandler(
-        res,
-        403,
-        "You don't have permission to perform this action"
-      );
-    }
     const plans = await Plan.find({ status: true });
     return responseHandler(res, 200, "Plans retrieved successfully", plans);
   } catch (error) {
