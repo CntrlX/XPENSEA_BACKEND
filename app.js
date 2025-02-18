@@ -15,6 +15,7 @@ const {
   swaggerOptions,
 } = require("./src/swagger/swagger");
 
+
 const app = express();
 
 app.use(express.static("views"));
@@ -45,6 +46,7 @@ const startServer = async () => {
     const { PORT, API_VERSION } = process.env;
     const userRoute = require("./src/routes/user");
     const adminRoute = require("./src/routes/admin");
+    const superAdminRoute = require("./src/routes/superAdmin");
 
     //* Define the PORT & API version based on environment variables
 
@@ -67,6 +69,7 @@ const startServer = async () => {
     //* Configure routes for user API
     app.use(`${BASE_PATH}/admin`, adminRoute);
     app.use(`${BASE_PATH}/user`, userRoute);
+    app.use(`${BASE_PATH}/superadmin`,superAdminRoute);
 
     //? Define a route for the API root
     app.get(BASE_PATH, (req, res) => {
