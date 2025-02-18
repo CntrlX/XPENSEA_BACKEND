@@ -4,6 +4,7 @@ const authVerify = require("../middlewares/authVerify");
 const adminRoute = express.Router();
 
 adminRoute.post("/login", adminController.loginAdmin);
+adminRoute.get("/plan", adminController.getPlans);
 
 adminRoute.use(authVerify);
 
@@ -75,10 +76,7 @@ adminRoute.get("/dashboard", adminController.getDashboard);
 adminRoute.post("/deduct", adminController.deductWallet);
 
 // Plan Routes
-adminRoute
-  .route("/plan")
-  .post(adminController.createPlan)
-  .get(adminController.getPlans);
+adminRoute.route("/plan").post(adminController.createPlan);
 
 adminRoute
   .route("/plan/:id")
