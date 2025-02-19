@@ -1,7 +1,14 @@
 const express = require("express");
 const superAdminController = require("../controllers/superAdminController");
 const superAdminRoute = express.Router();
+const authVerify = require("../middlewares/authVerifySuperAdmin");
 
+superAdminRoute.route("/login").post(superAdminController.superAdminLogin);
+
+superAdminRoute.use(authVerify);
+superAdminRoute
+  .route("/createadmin")
+  .post(superAdminController.createCompanyAdmin);
 superAdminRoute.get("/companies", superAdminController.getAllCompanies);
 superAdminRoute.get(
   "/companies/:companyId",

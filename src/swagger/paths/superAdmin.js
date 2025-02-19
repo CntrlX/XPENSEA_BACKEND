@@ -203,7 +203,7 @@
 
 /**
  * @swagger
- * /superadmin/transactions:
+ * /superadmin/payments:
  *   get:
  *     summary: Get all transactions
  *     description: Retrieve a list of all transactions across all companies
@@ -251,7 +251,7 @@
 
 /**
  * @swagger
- * /superadmin/transactions/{companyId}:
+ * /superadmin/payments/{companyId}:
  *   get:
  *     summary: Get company transactions
  *     description: Retrieve all transactions for a specific company

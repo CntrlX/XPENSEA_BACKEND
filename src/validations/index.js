@@ -7,8 +7,16 @@ exports.createAdminSchema = Joi.object({
   mobile: Joi.string().required(),
   password: Joi.string().required(),
   role: Joi.string().required(),
-  company: Joi.string().required(),
   status: Joi.boolean(),
+});
+
+exports.createCompanyAdminSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string().email().required(),
+  mobile: Joi.string().required(),
+  password: Joi.string().required(),
+  company: Joi.string(),
+  role: Joi.string().required(),
 });
 
 exports.editAdminSchema = Joi.object({
@@ -222,6 +230,8 @@ exports.createCompanySchema = Joi.object({
   address: Joi.string().required(),
   industry: Joi.string().required(),
   plan: Joi.string().required(),
+  admin_name: Joi.string().required(),
+  company_size: Joi.string().required(),
 });
 
 exports.editCompanySchema = Joi.object({
@@ -230,6 +240,8 @@ exports.editCompanySchema = Joi.object({
   address: Joi.string(),
   industry: Joi.string(),
   plan: Joi.string(),
+  admin_name: Joi.string(),
+  company_size: Joi.string(),
 });
 
 //nodemailer code
