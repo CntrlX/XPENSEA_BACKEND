@@ -42,6 +42,7 @@ const userSchema = mongoose.Schema(
     deletedAt: {
       type: Date,
     },
+ 
   },
   { timestamps: true }
 );

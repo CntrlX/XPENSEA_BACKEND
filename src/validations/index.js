@@ -244,29 +244,22 @@ exports.editCompanySchema = Joi.object({
   company_size: Joi.string(),
 });
 
-//nodemailer code
 
-// var nodemailer = require('nodemailer');
+exports.createTicketSchema = Joi.object({
+  company: Joi.string().required(),
+  admin: Joi.string().required(),
+  subject: Joi.string().trim().required(),
+  description: Joi.string().trim().required(),
+  status: Joi.string().valid("Open", "In Progress", "Resolved", "Closed").default("Open"),
+  priority: Joi.string().valid("Low", "Medium", "High", "Critical").default("Medium"),
+});
 
-// var transporter = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//     user: 'help.xpensea@gmail.com',
-//     pass: 'bvix uhjn cvwf wczw'
-//   }
-// });
+exports.updateStatusSchema = Joi.object({
+  status: Joi.string().valid("Open", "In Progress", "Resolved", "Closed").required(),
+});
 
-// var mailOptions = {
-//   from: 'help.xpensea@gmail.com',
-//   to: 'rishariyad@gmail.com',
-//   subject: 'Sending Email using Node.js',
-//   text: 'This is a test email!'
-// };
+exports.addResponseSchema = Joi.object({
+  admin: Joi.string().required(),
+  message: Joi.string().required(),
+});
 
-// transporter.sendMail(mailOptions, function(error, info){
-//   if (error) {
-//     console.log(error);
-//   } else {
-//     console.log('Email sent: ' + info.response);
-//   }
-// });

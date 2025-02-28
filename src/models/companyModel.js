@@ -4,6 +4,18 @@ const companySchema = new mongoose.Schema(
   {
     name: { type: String, trim: true },
     admin_name: { type: String, trim: true },
+    otp: {
+      type: String,
+      select: false
+    },
+    otpExpiry: {
+      type: Date,
+      select: false
+    },
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
     email: {
       type: String,
       trim: true,
@@ -22,6 +34,9 @@ const companySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
+companySchema.index({ email: 1 });
 
 const Company = mongoose.model("Company", companySchema);
 

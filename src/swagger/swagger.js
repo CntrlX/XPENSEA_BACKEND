@@ -5,17 +5,11 @@ const { PORT, API_VERSION } = process.env;
 const swaggerDefinition = {
   openapi: "3.0.0",
   info: {
-    title: "Xpensea API Documentation",
+    title: "Xpensea API",
     version: "1.0.0",
-    description: "API documentation for Xpensea application",
+    description: "API documentation for Xpensea",
   },
   servers: [
-    {
-      url: `https://xpensea-backend-189792861103.us-central1.run.app/api/v1/`,
-    },
-    {
-      url: `https://xpensea--backend-393541516579.asia-south1.run.app/api/v1/`,
-    },
     {
       url: `http://localhost:${PORT}/api/${API_VERSION}`,
     },
@@ -33,9 +27,9 @@ const swaggerDefinition = {
     {
       BearerAuth: [],
     },
+
   ],
 };
-
 const options = {
   swaggerDefinition,
   apis: ["./src/swagger/paths/*.js"],

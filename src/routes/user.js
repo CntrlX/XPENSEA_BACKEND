@@ -9,7 +9,6 @@ userRoute.post("/send-otp", userController.sendOtp);
 userRoute.post("/verify", userController.verifyUser);
 userRoute.post("/mpin", userController.mpinHandler);
 userRoute.get("/verified/:phone", userController.checkVerified);
-userRoute.post("/register-company", userController.registerCompany);
 userRoute.get("/payment/success", userController.successPayment);
 userRoute.get("/payment/failure", userController.failurePayment);
 
@@ -47,6 +46,5 @@ userRoute.get("/policy", userController.getPolicy);
 
 userRoute.post("/location", userController.saveLocation);
 // userRoute.post("/transaction", userController.createtransaction);
-
 
 module.exports = userRoute;

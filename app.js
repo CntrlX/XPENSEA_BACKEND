@@ -10,9 +10,9 @@ const responseHandler = require("./src/helpers/responseHandler");
 const loadSecrets = require("./src/config/env.config");
 
 const {
-  swaggerUi,
-  swaggerSpec,
   swaggerOptions,
+  swaggerSpec,
+  swaggerUi,
 } = require("./src/swagger/swagger");
 
 
@@ -47,6 +47,8 @@ const startServer = async () => {
     const userRoute = require("./src/routes/user");
     const adminRoute = require("./src/routes/admin");
     const superAdminRoute = require("./src/routes/superAdmin");
+    const ticketRoute = require("./src/routes/ticket");
+
 
     //* Define the PORT & API version based on environment variables
 
@@ -60,16 +62,19 @@ const startServer = async () => {
     require("./src/jobs");
 
     //* Swagger setup
-    app.use(
-      "/api-docs",
-      swaggerUi.serve,
-      swaggerUi.setup(swaggerSpec, swaggerOptions)
-    );
-
+  
+//* Swagger setup
+app.use(
+  `${BASE_PATH}/api-docs`,
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerOptions)
+);
     //* Configure routes for user API
     app.use(`${BASE_PATH}/admin`, adminRoute);
     app.use(`${BASE_PATH}/user`, userRoute);
     app.use(`${BASE_PATH}/superadmin`,superAdminRoute);
+    app.use(`${BASE_PATH}/tickets`, ticketRoute);
+
 
     //? Define a route for the API root
     app.get(BASE_PATH, (req, res) => {

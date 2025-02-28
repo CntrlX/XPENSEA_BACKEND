@@ -3,12 +3,18 @@ const superAdminController = require("../controllers/superAdminController");
 const superAdminRoute = express.Router();
 const authVerify = require("../middlewares/authVerifySuperAdmin");
 
+superAdminRoute.post("/register-company", superAdminController.registerCompany);
+superAdminRoute.post("/verify-email", superAdminController.sendOtpToEmail);
+superAdminRoute.post("/verify-otp", superAdminController.verifyEmailOtp);
 superAdminRoute.route("/login").post(superAdminController.superAdminLogin);
 
 superAdminRoute.use(authVerify);
+
+
 superAdminRoute
   .route("/createadmin")
   .post(superAdminController.createCompanyAdmin);
+
 superAdminRoute.get("/companies", superAdminController.getAllCompanies);
 superAdminRoute.get(
   "/companies/:companyId",
@@ -16,7 +22,11 @@ superAdminRoute.get(
 );
 
 superAdminRoute.get("/plans", superAdminController.getAllPlans);
-superAdminRoute.get("/plans/:planId", superAdminController.getPlanById);
+superAdminRoute
+  .route("/plan/:id")
+  .get(superAdminController.getPlanById)
+  .put(superAdminController.updatePlan)
+  .delete(superAdminController.deletePlan);
 
 superAdminRoute.get("/payments", superAdminController.getAllPayments);
 superAdminRoute.get(
