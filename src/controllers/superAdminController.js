@@ -15,7 +15,6 @@ const Transaction = require("../models/transactionModel");
 const { generateToken } = require("../utils/generateTokenSuperAdmin");
 const { generateOTP } = require("../utils/generateOTP");
 const Stripe = require("stripe");
-const { generateRandomPassword } = require("../utils/generateRandomPassword");
 const stripe = Stripe(process.env.STRIPE_SECRET);
 
 exports.superAdminLogin = async (req, res) => {
@@ -120,33 +119,6 @@ exports.registerCompany = async (req, res) => {
       subject: "Company Registration Updated",
       text: `Company ${existingCompany.name} has been updated and is proceeding with payment.`,
     });
-
-    const generatedPassword = generateRandomPassword();
-
-    const hashedPassword = await hashPassword(generatedPassword);
-
-    const newAdmin = await Admin.create({
-      company: existingCompany._id,
-      name: existingCompany.admin_name,
-      designation: "Administrator",
-      email: existingCompany.ownerEmail,
-      role: "666c1a3895a6b176b7f2bcf7",
-      password: hashedPassword,
-      status: true,
-    });
-
-    if (newAdmin) {
-      await generateMail({
-        to: newAdmin.email,
-        subject: "Welcome to Admin Panel",
-        text: `Hi ${newAdmin.name},\n
-        Welcome to Admin Panel.\n
-        Your account has been created successfully.\n
-        Username: ${newAdmin.email}\n
-        Password: ${req.body.password}\n
-        Login to your account and start managing your expenses and reports.`,
-      });
-    }
 
     return responseHandler(
       res,

@@ -47,6 +47,8 @@ exports.loginAdmin = async (req, res) => {
     const findAdmin = await Admin.findOne({ email });
     if (!findAdmin) {
       return responseHandler(res, 404, "Admin not found");
+    }else if(!findAdmin.status){
+      return responseHandler(res, 404, "Admin is not active");
     }
 
     const comparePassword = await comparePasswords(

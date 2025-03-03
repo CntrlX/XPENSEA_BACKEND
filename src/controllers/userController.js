@@ -33,6 +33,8 @@ const Payment = require("../models/paymentModel");
 const stripe = Stripe(process.env.STRIPE_SECRET);
 const path = require("path");
 const generateMail = require("../utils/generateMail");
+const Admin = require("../models/adminModel");
+const { generateRandomPassword } = require("../utils/generateRandomPassword");
 
 /* The `exports.sendOtp` function is responsible for sending an OTP (One Time Password) to a user's
 mobile number for verification purposes. Here is a breakdown of what the function is doing: */
@@ -1505,7 +1507,6 @@ exports.saveLocation = async (req, res) => {
   }
 };
 
-
 exports.successPayment = async (req, res) => {
   try {
     const sessionId = req.query.session_id;
@@ -1517,11 +1518,38 @@ exports.successPayment = async (req, res) => {
       { new: true }
     );
 
-    await Company.findByIdAndUpdate(
+    const company = await Company.findByIdAndUpdate(
       updatePayment.company,
       { status: true },
       { new: true }
     );
+
+    const generatedPassword = generateRandomPassword();
+
+    const hashedPassword = await hashPassword(generatedPassword);
+
+    const newAdmin = await Admin.create({
+      company: company._id,
+      name: company.admin_name,
+      designation: "Administrator",
+      email: company.ownerEmail,
+      role: "666c1a3895a6b176b7f2bcf7",
+      password: hashedPassword,
+    });
+
+    if (newAdmin) {
+      await generateMail({
+        to: newAdmin.email,
+        subject: "Welcome to Admin Panel",
+        text: `Hi ${newAdmin.name},\n
+        Welcome to Admin Panel.\n
+        Your account has been created successfully.\n
+        Username: ${newAdmin.email}\n
+        Password: ${generatedPassword}\n
+        Login to your account and start managing your expenses and reports.`,
+      });
+    }
+
     res.sendFile(path.join(__dirname, "../views/success.html"));
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
