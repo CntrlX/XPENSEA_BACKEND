@@ -1547,7 +1547,7 @@ exports.successPayment = async (req, res) => {
         Your account has been created successfully.\n
         Username: ${newAdmin.email}\n
         Password: ${generatedPassword}\n
-        Use the link https://dashboard.xpensea.com/dashboard for login.\n
+        Use the link https://dashboard.xpensea.com for login.\n
         Login to your account and start managing your expenses and reports.`,
       });
     }
