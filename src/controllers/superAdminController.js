@@ -4,7 +4,10 @@ const Plan = require("../models/planModel");
 const Payment = require("../models/paymentModel");
 const checkAccess = require("../helpers/checkAccess");
 const moment = require("moment-timezone");
-const { createCompanyAdminSchema, createCompanySchema } = require("../validations");
+const {
+  createCompanyAdminSchema,
+  createCompanySchema,
+} = require("../validations");
 const { hashPassword, comparePasswords } = require("../utils/bcrypt");
 const generateMail = require("../utils/generateMail");
 const Admin = require("../models/adminModel");
@@ -12,9 +15,8 @@ const Transaction = require("../models/transactionModel");
 const { generateToken } = require("../utils/generateTokenSuperAdmin");
 const { generateOTP } = require("../utils/generateOTP");
 const Stripe = require("stripe");
+const { generateRandomPassword } = require("../utils/generateRandomPassword");
 const stripe = Stripe(process.env.STRIPE_SECRET);
-
-
 
 exports.superAdminLogin = async (req, res) => {
   try {
@@ -48,7 +50,6 @@ exports.superAdminLogin = async (req, res) => {
     );
   }
 };
-
 
 exports.registerCompany = async (req, res) => {
   try {
@@ -120,6 +121,33 @@ exports.registerCompany = async (req, res) => {
       text: `Company ${existingCompany.name} has been updated and is proceeding with payment.`,
     });
 
+    const generatedPassword = generateRandomPassword();
+
+    const hashedPassword = await hashPassword(generatedPassword);
+
+    const newAdmin = await Admin.create({
+      company: existingCompany._id,
+      name: existingCompany.admin_name,
+      designation: "Administrator",
+      email: existingCompany.ownerEmail,
+      role: "666c1a3895a6b176b7f2bcf7",
+      password: hashedPassword,
+      status: true,
+    });
+
+    if (newAdmin) {
+      await generateMail({
+        to: newAdmin.email,
+        subject: "Welcome to Admin Panel",
+        text: `Hi ${newAdmin.name},\n
+        Welcome to Admin Panel.\n
+        Your account has been created successfully.\n
+        Username: ${newAdmin.email}\n
+        Password: ${req.body.password}\n
+        Login to your account and start managing your expenses and reports.`,
+      });
+    }
+
     return responseHandler(
       res,
       200,
@@ -130,7 +158,6 @@ exports.registerCompany = async (req, res) => {
     return responseHandler(res, 500, `Internal Server Error ${error.message}`);
   }
 };
-
 
 exports.getAllCompanies = async (req, res) => {
   try {
@@ -433,10 +460,15 @@ exports.getCompanyPayments = async (req, res) => {
   }
 };
 
-
 exports.getDashboardStats = async (req, res) => {
   try {
-    const [totalCompanies, activeCompanies, companyPlanStats, totalRevenue, companyPlanCounts] = await Promise.all([
+    const [
+      totalCompanies,
+      activeCompanies,
+      companyPlanStats,
+      totalRevenue,
+      companyPlanCounts,
+    ] = await Promise.all([
       Company.countDocuments(),
       Company.countDocuments({ status: true }),
       Plan.aggregate([
@@ -501,9 +533,8 @@ exports.getDashboardStats = async (req, res) => {
         plans: companyPlanStats,
         planSubscriptions: companyPlanCounts,
       },
-      revenue:  totalRevenue,
-      monthleyRevenue: totalRevenue / 12
-      
+      revenue: totalRevenue,
+      monthleyRevenue: totalRevenue / 12,
     };
 
     return responseHandler(
@@ -516,8 +547,6 @@ exports.getDashboardStats = async (req, res) => {
     return responseHandler(res, 500, `Internal Server Error ${error.message}`);
   }
 };
-
-
 
 exports.createCompanyAdmin = async (req, res) => {
   try {
