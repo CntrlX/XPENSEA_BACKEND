@@ -502,6 +502,7 @@ exports.getDashboardStats = async (req, res) => {
         planSubscriptions: companyPlanCounts,
       },
       revenue:  totalRevenue,
+      monthleyRevenue: totalRevenue / 12
       
     };
 
