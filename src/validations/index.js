@@ -232,6 +232,7 @@ exports.createCompanySchema = Joi.object({
   plan: Joi.string().required(),
   admin_name: Joi.string().required(),
   company_size: Joi.string().required(),
+  phone: Joi.string().required(),
 });
 
 exports.editCompanySchema = Joi.object({

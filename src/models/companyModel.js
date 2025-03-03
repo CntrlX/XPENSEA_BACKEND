@@ -20,6 +20,7 @@ const companySchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    phone: { type: String, trim: true },
     industry: { type: String, trim: true },
     company_size: { type: String, trim: true },
     address: { type: String, trim: true },

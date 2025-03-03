@@ -1531,8 +1531,9 @@ exports.successPayment = async (req, res) => {
     const newAdmin = await Admin.create({
       company: company._id,
       name: company.admin_name,
-      designation: "Administrator",
+      designation: "Admin",
       email: company.email,
+      mobile: company.phone,
       role: "666c1a3895a6b176b7f2bcf7",
       password: hashedPassword,
       status: true,
