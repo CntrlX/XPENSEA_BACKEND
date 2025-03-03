@@ -1532,9 +1532,10 @@ exports.successPayment = async (req, res) => {
       company: company._id,
       name: company.admin_name,
       designation: "Administrator",
-      email: company.ownerEmail,
+      email: company.email,
       role: "666c1a3895a6b176b7f2bcf7",
       password: hashedPassword,
+      status: true,
     });
 
     if (newAdmin) {
