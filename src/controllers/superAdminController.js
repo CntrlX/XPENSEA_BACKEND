@@ -95,7 +95,7 @@ exports.registerCompany = async (req, res) => {
         },
       ],
       mode: "payment",
-      customer_email: existingCompany.ownerEmail,
+      customer_email: existingCompany.email,
       billing_address_collection: "required",
       customer_creation: "always",
       success_url: `${baseUrl}/user/payment/success?session_id={CHECKOUT_SESSION_ID}`,
