@@ -2113,7 +2113,7 @@ exports.createPolicy = async (req, res) => {
     }
 
     // Create the policy record
-    req.body.companyId = req.companyId;
+    policyData.companyId = req.companyId;
     const newPolicy = await Policy.create(policyData);
 
     if (newPolicy) {

@@ -1,3 +1,4 @@
-exports.generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+exports.generateOTP = (count) => {
+  const digits = Math.pow(10, count - 1); 
+  return Math.floor(digits + Math.random() * 9 * digits).toString();
 };
