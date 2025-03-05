@@ -468,7 +468,7 @@ exports.listController = async (req, res) => {
         "transactions",
       ].includes(type)
     ) {
-      filter.company = req.companyId;
+      filter.company = new mongoose.Types.ObjectId(req.companyId)
     }
 
     if (type === "admins") {
