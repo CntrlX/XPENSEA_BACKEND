@@ -1,12 +1,10 @@
 const express = require("express");
-const adminController = require("../../controllers/adminController");
-const userController = require("../../controllers/userController");
+const walletController = require("./walletController");
 const walletRoute = express.Router();
 
-walletRoute.get("/:id", adminController.getWallet);
-walletRoute.post("/deduct", adminController.deductWallet);
+walletRoute.get("/:id", walletController.getWallet);
+walletRoute.post("/deduct", walletController.deductWallet);
 
-walletRoute.get("/used", userController.getWalletUsed);
-walletRoute.get("/", userController.getWallet);
+walletRoute.get("/used", walletController.getWalletUsed);
 
 module.exports = walletRoute; 

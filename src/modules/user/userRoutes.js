@@ -1,5 +1,5 @@
 const express = require("express");
-const userController = require("../../controllers/userController");
+const userController = require("./userController");
 const authVerify = require("../../middlewares/authVerify");
 
 const userRoute = express.Router();
@@ -15,13 +15,10 @@ userRoute.get("/payment/failure", userController.failurePayment);
 // Protected Routes (Require Authentication)
 userRoute.use(authVerify);
 
-userRoute.post("/expense", userController.createExpense);
-userRoute.post("/report", userController.createReport);
+
 userRoute.get("/list", userController.listController);
 
-userRoute.get("/expense/:id", userController.getExpense);
-userRoute.get("/report/:id", userController.getReport);
-userRoute.put("/report/:id", userController.updateReport);
+
 userRoute.get("/category", userController.getCategory);
 
 userRoute.put("/change-mpin", userController.changeMpin);
@@ -39,12 +36,8 @@ userRoute.put("/reimburse/:id", userController.reimburseReport);
 
 userRoute.get("/image-analysis", userController.imageAnalysis);
 
-userRoute.post("/advance-payment", userController.createtransaction);
-userRoute.get("/advance-payment/:id", userController.viewtransactionById);
-userRoute.get("/wallet", userController.getWallet);
+
 userRoute.get("/policy", userController.getPolicy);
 
-userRoute.post("/location", userController.saveLocation);
-// userRoute.post("/transaction", userController.createtransaction);
 
 module.exports = userRoute;

@@ -1,9 +1,9 @@
 const express = require("express");
-const userController = require("../../controllers/userController");
+const reportController = require("./reportController");
 const reportRoute = express.Router();
 
-reportRoute.post("/", userController.createReport);
-reportRoute.get("/:id", userController.getReport);
-reportRoute.put("/:id", userController.updateReport);
+reportRoute.post("/", reportController.createReport);
+reportRoute.get("/:id", reportController.getReport);
+reportRoute.put("/:id", reportController.updateReport);
 
 module.exports = reportRoute; 

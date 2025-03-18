@@ -1,7 +1,7 @@
 const express = require("express");
-const userController = require("../../controllers/userController");
+const locationController = require("./locationController");
 const locationRoute = express.Router();
 
-locationRoute.post("/", userController.saveLocation);
+locationRoute.post("/", locationController.saveLocation);
 
 module.exports = locationRoute; 

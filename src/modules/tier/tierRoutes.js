@@ -1,13 +1,13 @@
 const express = require("express");
-const adminController = require("../../controllers/adminController");
+const tierController = require("./tierController");
 const tierRoute = express.Router();
 
-tierRoute.post("/", adminController.createTier);
+tierRoute.post("/", tierController.createTier);
 
 tierRoute
   .route("/:id")
-  .put(adminController.editTier)
-  .get(adminController.getTier)
-  .delete(adminController.deleteTier);
+  .put(tierController.editTier)
+  .get(tierController.getTier)
+  .delete(tierController.deleteTier);
 
 module.exports = tierRoute; 

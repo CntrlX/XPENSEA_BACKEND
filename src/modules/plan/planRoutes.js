@@ -1,13 +1,13 @@
 const express = require("express");
-const adminController = require("../../controllers/adminController");
+const planController = require("./planController");
 const planRoute = express.Router();
 
-planRoute.post("/", adminController.createPlan);
+planRoute.post("/", planController.createPlan);
 
 planRoute
   .route("/:id")
-  .get(adminController.getPlanById)
-  .put(adminController.updatePlan)
-  .delete(adminController.deletePlan);
+  .get(planController.getPlanById)
+  .put(planController.updatePlan)
+  .delete(planController.deletePlan);
 
 module.exports = planRoute; 

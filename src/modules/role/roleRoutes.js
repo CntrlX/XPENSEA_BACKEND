@@ -1,13 +1,13 @@
 const express = require("express");
-const adminController = require("../../controllers/adminController");
+const roleController = require("./roleController");
 const roleRoute = express.Router();
 
-roleRoute.route("/").post(adminController.createRole);
+roleRoute.route("/").post(roleController.createRole);
 
 roleRoute
   .route("/:id")
-  .put(adminController.editRole)
-  .get(adminController.getRole)
-  .delete(adminController.deleteRole);
+  .put(roleController.editRole)
+  .get(roleController.getRole)
+  .delete(roleController.deleteRole);
 
 module.exports = roleRoute; 

@@ -1,5 +1,5 @@
 const express = require("express");
-const superAdminController = require("../../controllers/superAdminController");
+const superAdminController = require("./superAdminController");
 const superAdminRoute = express.Router();
 const authVerify = require("../../middlewares/authVerifySuperAdmin");
 

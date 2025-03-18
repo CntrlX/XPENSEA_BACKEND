@@ -1,19 +1,19 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const Company = require("../models/companyModel");
 const Plan = require("../models/planModel");
 const Payment = require("../models/paymentModel");
-const checkAccess = require("../helpers/checkAccess");
+const checkAccess = require("../../helpers/checkAccess");
 const moment = require("moment-timezone");
 const {
   createCompanyAdminSchema,
   createCompanySchema,
-} = require("../validations");
-const { hashPassword, comparePasswords } = require("../utils/bcrypt");
-const generateMail = require("../utils/generateMail");
+} = require("../../validations");
+const { hashPassword, comparePasswords } = require("../../utils/bcrypt");
+const generateMail = require("../../utils/generateMail");
 const Admin = require("../models/adminModel");
 const Transaction = require("../models/transactionModel");
-const { generateToken } = require("../utils/generateTokenSuperAdmin");
-const { generateOTP } = require("../utils/generateOTP");
+const { generateToken } = require("../../utils/generateTokenSuperAdmin");
+const { generateOTP } = require("../../utils/generateOTP");
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET);
 

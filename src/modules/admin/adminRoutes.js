@@ -1,10 +1,9 @@
 const express = require("express");
-const adminController = require("../../controllers/adminController");
+const adminController = require("./adminController");
 const authVerify = require("../../middlewares/authVerify");
 const adminRoute = express.Router();
 
 adminRoute.post("/login", adminController.loginAdmin);
-adminRoute.get("/plan", adminController.getPlans);
 
 adminRoute.use(authVerify);
 
@@ -20,23 +19,12 @@ adminRoute
   .get(adminController.getAdminById)
   .delete(adminController.deleteAdmin);
 
-adminRoute.route("/role").post(adminController.createRole);
 
-adminRoute
-  .route("/role/:id")
-  .put(adminController.editRole)
-  .get(adminController.getRole)
-  .delete(adminController.deleteRole);
 
+//todo admin list
 adminRoute.get("/list", adminController.listController);
 
-adminRoute.post("/tier", adminController.createTier);
 
-adminRoute
-  .route("/tier/:id")
-  .put(adminController.editTier)
-  .get(adminController.getTier)
-  .delete(adminController.deleteTier);
 
 adminRoute.post("/user", adminController.createUser);
 
@@ -61,27 +49,16 @@ adminRoute.put("/reimburse/:id", adminController.reimburseReport);
 adminRoute.get("/users/filtered", adminController.getFilteredUsers);
 adminRoute.get("/finance/:id", adminController.getFinance);
 
-adminRoute.post("/transaction", adminController.createtransaction);
-adminRoute.get("/transaction", adminController.viewTransactionsAndDeductions);
-adminRoute.get("/transaction/:id", adminController.viewtransactionById);
-adminRoute.put("/transaction/:id", adminController.transactionMarkCompleted);
 
-adminRoute.post("/policy", adminController.createPolicy);
-adminRoute.get("/policy/:id", adminController.viewPolicyById);
-adminRoute.put("/policy/:id", adminController.updatePolicy);
+
+
 
 adminRoute.get("/wallet/:id", adminController.getWallet);
 adminRoute.get("/approvers", adminController.getApprovers);
 adminRoute.get("/dashboard", adminController.getDashboard);
 adminRoute.post("/deduct", adminController.deductWallet);
 
-// Plan Routes
-adminRoute.route("/plan").post(adminController.createPlan);
 
-adminRoute
-  .route("/plan/:id")
-  .get(adminController.getPlanById)
-  .put(adminController.updatePlan)
-  .delete(adminController.deletePlan);
+
 
 module.exports = adminRoute;

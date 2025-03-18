@@ -1,8 +1,9 @@
 const express = require("express");
-const userController = require("../../controllers/userController");
+const userController = require("../user/userController");
+const expenseController = require("./expenseController");
 const expenseRoute = express.Router();
 
-expenseRoute.post("/", userController.createExpense);
-expenseRoute.get("/:id", userController.getExpense);
+expenseRoute.post("/", expenseController.createExpense);
+expenseRoute.get("/:id", expenseController.getExpense);
 
 module.exports = expenseRoute; 
