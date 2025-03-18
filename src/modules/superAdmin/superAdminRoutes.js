@@ -1,7 +1,7 @@
 const express = require("express");
-const superAdminController = require("../controllers/superAdminController");
+const superAdminController = require("../../controllers/superAdminController");
 const superAdminRoute = express.Router();
-const authVerify = require("../middlewares/authVerifySuperAdmin");
+const authVerify = require("../../middlewares/authVerifySuperAdmin");
 
 superAdminRoute.post("/register-company", superAdminController.registerCompany);
 superAdminRoute.post("/verify-email", superAdminController.sendOtpToEmail);
