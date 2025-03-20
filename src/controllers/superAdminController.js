@@ -431,7 +431,6 @@ exports.getCompanyPayments = async (req, res) => {
     return responseHandler(res, 500, `Internal Server Error ${error.message}`);
   }
 };
-
 exports.getDashboardStats = async (req, res) => {
   try {
     const [
@@ -439,7 +438,7 @@ exports.getDashboardStats = async (req, res) => {
       activeCompanies,
       companyPlanStats,
       totalRevenue,
-      companyPlanCounts,
+      companyPlanCountsRaw,
     ] = await Promise.all([
       Company.countDocuments(),
       Company.countDocuments({ status: true }),
@@ -460,9 +459,7 @@ exports.getDashboardStats = async (req, res) => {
             as: "planDetails",
           },
         },
-        {
-          $unwind: "$planDetails",
-        },
+        { $unwind: "$planDetails" },
         {
           $group: {
             _id: null,
@@ -485,9 +482,7 @@ exports.getDashboardStats = async (req, res) => {
             as: "planDetails",
           },
         },
-        {
-          $unwind: "$planDetails",
-        },
+        { $unwind: "$planDetails" },
         {
           $project: {
             _id: 0,
@@ -498,15 +493,21 @@ exports.getDashboardStats = async (req, res) => {
       ]).then((data) => data),
     ]);
 
+    // Calculate the percentage for each plan
+    const companyPlanCounts = companyPlanCountsRaw.map((plan) => ({
+      ...plan,
+      percentage: totalCompanies > 0 ? ((plan.count / totalCompanies) * 100).toFixed(2) : 0,
+    }));
+
     const dashboardData = {
       companies: {
         total: totalCompanies,
         active: activeCompanies,
         plans: companyPlanStats,
-        planSubscriptions: companyPlanCounts,
       },
+      companyPlanCounts,
       revenue: totalRevenue,
-      monthleyRevenue: totalRevenue / 12,
+      monthlyRevenue: totalRevenue / 12,
     };
 
     return responseHandler(
@@ -519,6 +520,7 @@ exports.getDashboardStats = async (req, res) => {
     return responseHandler(res, 500, `Internal Server Error ${error.message}`);
   }
 };
+
 
 exports.createCompanyAdmin = async (req, res) => {
   try {
@@ -595,7 +597,7 @@ exports.sendOtpToEmail = async (req, res) => {
       );
     }
 
-    const otp = generateOTP();
+    const otp = generateOTP(4);
 
     // Save or update company with new OTP
     await Company.findOneAndUpdate(
@@ -615,8 +617,9 @@ exports.sendOtpToEmail = async (req, res) => {
       to: email,
       subject: "Email Verification OTP",
       text: `Hi ${name},\n\nYour OTP for email verification is: ${otp}. \nIt is valid for 5 minutes.\n\nThank you!`,
+      
     });
-
+    console.log("this is otp", otp);
     return responseHandler(
       res,
       200,

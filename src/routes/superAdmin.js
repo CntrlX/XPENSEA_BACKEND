@@ -4,6 +4,8 @@ const superAdminRoute = express.Router();
 const authVerify = require("../middlewares/authVerifySuperAdmin");
 
 superAdminRoute.post("/register-company", superAdminController.registerCompany);
+
+
 superAdminRoute.post("/verify-email", superAdminController.sendOtpToEmail);
 superAdminRoute.post("/verify-otp", superAdminController.verifyEmailOtp);
 superAdminRoute.route("/login").post(superAdminController.superAdminLogin);

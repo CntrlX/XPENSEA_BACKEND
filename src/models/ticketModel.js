@@ -14,6 +14,7 @@ const ticketSchema = new mongoose.Schema(
     },
     subject: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
+    document : { type: String },
     status: {
       type: String,
       enum: ["Open", "In Progress", "Resolved", "Closed"],
@@ -29,6 +30,16 @@ const ticketSchema = new mongoose.Schema(
         admin: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Admin",
+        },
+        message: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    superAdminResponses: [
+      {
+        admin: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Superadmin",
         },
         message: { type: String, required: true },
         createdAt: { type: Date, default: Date.now },

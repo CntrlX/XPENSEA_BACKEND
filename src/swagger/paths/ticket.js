@@ -105,24 +105,6 @@
  *                 type: string
  *                 enum: [Low, Medium, High, Critical]
  *                 default: Medium
- *               metadata:
- *                 type: object
- *                 properties:
- *                   browser:
- *                     type: string
- *                     example: "Chrome 122.0"
- *                   os:
- *                     type: string
- *                     example: "Windows 11"
- *                   device:
- *                     type: string
- *                     example: "Desktop"
- *                   url:
- *                     type: string
- *                     example: "/dashboard"
- *                   errorCode:
- *                     type: string
- *                     example: "404"
  *     responses:
  *       201:
  *         description: Ticket created successfully

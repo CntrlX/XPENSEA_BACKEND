@@ -5,6 +5,7 @@ const { checkAccess } = require("../helpers/checkAccess");
 
 exports.createTicket = async (req, res) => {
   try {
+    console.log(req.body);
     const createTicketValidator = createTicketSchema.validate(req.body, {
       abortEarly: true,
     });
@@ -20,7 +21,6 @@ exports.createTicket = async (req, res) => {
       subject: req.body.subject,
       description: req.body.description,
       priority: req.body.priority,
-      metadata: req.body.metadata,
       admin: req.userId,
       company: req.companyId
     });
@@ -37,17 +37,11 @@ exports.createTicket = async (req, res) => {
 
 exports.getAllTickets = async (req, res) => {
   try {
-    const permissions = await checkAccess(req.roleId, "permissions");
-    if (!permissions || !permissions.includes("ticket_view")) {
-      return responseHandler(
-        res,
-        403,
-        "You don't have permission to perform this action"
-      );
-    }
+    
 
     const { status, priority, search } = req.query;
-    let query = { company: req.companyId };
+    let query = { };
+   
     
     if (status && status !== 'all') {
       query.status = status;
@@ -77,14 +71,7 @@ exports.getAllTickets = async (req, res) => {
 
 exports.getTicketById = async (req, res) => {
   try {
-    const permissions = await checkAccess(req.roleId, "permissions");
-    if (!permissions || !permissions.includes("ticket_view")) {
-      return responseHandler(
-        res,
-        403,
-        "You don't have permission to perform this action"
-      );
-    }
+   
 
     const ticket = await Ticket.findOne({
       _id: req.params.id,
@@ -117,14 +104,6 @@ exports.updateTicketStatus = async (req, res) => {
       );
     }
 
-    const permissions = await checkAccess(req.roleId, "permissions");
-    if (!permissions || !permissions.includes("ticket_modify")) {
-      return responseHandler(
-        res,
-        403,
-        "You don't have permission to perform this action"
-      );
-    }
 
     const ticket = await Ticket.findOneAndUpdate(
       { _id: req.params.id, company: req.companyId },
@@ -155,14 +134,6 @@ exports.addResponse = async (req, res) => {
       );
     }
 
-    const permissions = await checkAccess(req.roleId, "permissions");
-    if (!permissions || !permissions.includes("ticket_respond")) {
-      return responseHandler(
-        res,
-        403,
-        "You don't have permission to perform this action"
-      );
-    }
 
     const ticket = await Ticket.findOneAndUpdate(
       { _id: req.params.id, company: req.companyId },
@@ -187,17 +158,10 @@ exports.addResponse = async (req, res) => {
   }
 };
 
+
 exports.getTicketMetrics = async (req, res) => {
   try {
-    const permissions = await checkAccess(req.roleId, "permissions");
-    if (!permissions || !permissions.includes("ticket_metrics_view")) {
-      return responseHandler(
-        res,
-        403,
-        "You don't have permission to perform this action"
-      );
-    }
-
+  
     const query = { company: req.companyId };
 
     const [

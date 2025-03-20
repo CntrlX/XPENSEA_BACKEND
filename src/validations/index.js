@@ -247,8 +247,9 @@ exports.editCompanySchema = Joi.object({
 
 
 exports.createTicketSchema = Joi.object({
-  company: Joi.string().required(),
-  admin: Joi.string().required(),
+  company: Joi.string(),
+  admin: Joi.string(),
+  document: Joi.string(),
   subject: Joi.string().trim().required(),
   description: Joi.string().trim().required(),
   status: Joi.string().valid("Open", "In Progress", "Resolved", "Closed").default("Open"),
