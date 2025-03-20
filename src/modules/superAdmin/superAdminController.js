@@ -1,7 +1,7 @@
 const responseHandler = require("../../helpers/responseHandler");
-const Company = require("../models/companyModel");
-const Plan = require("../models/planModel");
-const Payment = require("../models/paymentModel");
+const Company = require("../company/companyModel");
+const Plan = require("../plan/planModel");
+const Payment = require("../payment/paymentModel");
 const checkAccess = require("../../helpers/checkAccess");
 const moment = require("moment-timezone");
 const {

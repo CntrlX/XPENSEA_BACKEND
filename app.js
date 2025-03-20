@@ -44,10 +44,10 @@ const startServer = async () => {
     //   await loadSecrets();
     // }
     const { PORT, API_VERSION } = process.env;
-    const userRoute = require("./src/routes/user");
-    const adminRoute = require("./src/routes/admin");
-    const superAdminRoute = require("./src/routes/superAdmin");
-    const ticketRoute = require("./src/routes/ticket");
+    const userRoute = require("./src/modules/user/userRoutes");
+    const adminRoute = require("./src/modules/admin/adminRoutes");
+    const superAdminRoute = require("./src/modules/superAdmin/superAdminRoutes");
+    const ticketRoute = require("./src/modules/ticket/ticketRoutes");
 
 
     //* Define the PORT & API version based on environment variables

@@ -1,5 +1,5 @@
 const responseHandler = require("../helpers/responseHandler");
-const Tier = require("../models/tierModel");
+const Tier = require("../tier/tierModel");
 const moment = require("moment-timezone");
 const { createTierSchema, editTierSchema } = require("../validations");
 const checkAccess = require("../helpers/checkAccess");

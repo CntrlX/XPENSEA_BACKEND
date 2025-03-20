@@ -1,5 +1,5 @@
 const Tesseract = require('tesseract.js');
-const Expense = require('../models/expenseModel');
+const Expense = require('../modules/expense/expenseModel');
 const { ChatPromptTemplate } = require('@langchain/core/prompts');
 const { ChatOpenAI } = require('@langchain/openai');
 const { z } = require('zod');

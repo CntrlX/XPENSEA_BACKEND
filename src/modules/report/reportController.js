@@ -1,9 +1,9 @@
 const responseHandler = require("../helpers/responseHandler");
-const Report = require("../models/reportModel");
-const Expense = require("../models/expenseModel");
-const Notification = require("../models/notificationModel");
-const User = require("../models/userModel");
-const Event = require("../models/eventModel");
+const Report = require("./reportModel");
+const Expense = require("../expense/expenseModel");
+const Notification = require("../notification/notificationModel");
+const User = require("../user/userModel");
+const Event = require("../event/eventModel");
 const moment = require("moment-timezone");
 const { createReportSchema } = require("../validations");
 

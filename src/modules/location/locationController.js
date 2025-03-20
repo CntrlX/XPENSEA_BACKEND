@@ -1,5 +1,5 @@
 const responseHandler = require("../helpers/responseHandler");
-const Location = require("../models/locationModel");
+const Location = require("../location/locationModel");
 
 exports.saveLocation = async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 const responseHandler = require("../helpers/responseHandler");
-const Plan = require("../models/planModel");
+const Plan = require("../plan/planModel");
 const checkAccess = require("../helpers/checkAccess");
 const { createPlanSchema, updatePlanSchema } = require("../validations");
 

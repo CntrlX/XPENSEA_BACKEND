@@ -1,5 +1,5 @@
 const responseHandler = require("../helpers/responseHandler");
-const Role = require("../models/roleModel");
+const Role = require("../role/roleModel");
 const moment = require("moment-timezone");
 const { createRoleSchema, editRoleSchema } = require("../validations");
 const checkAccess = require("../helpers/checkAccess");

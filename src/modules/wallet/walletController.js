@@ -1,9 +1,9 @@
 const responseHandler = require("../../helpers/responseHandler");
-const User = require("../models/userModel");
-const Expense = require("../models/expenseModel");
-const Report = require("../models/reportModel");
-const transaction = require("../models/transactionModel");
-const Deduction = require("../models/deductionModel");
+const User = require("../user/userModel");
+const Expense = require("../expense/expenseModel");
+const Report = require("../report/reportModel");
+const transaction = require("../transaction/transactionModel");
+const Deduction = require("../deduction/deductionModel");
 const moment = require("moment-timezone");
 
 exports.getWallet = async (req, res) => {

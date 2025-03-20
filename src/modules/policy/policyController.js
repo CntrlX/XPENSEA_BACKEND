@@ -1,5 +1,5 @@
 const responseHandler = require("../helpers/responseHandler");
-const Policy = require("../models/policyModel");
+const Policy = require("./policyModel");
 
 exports.createPolicy = async (req, res) => {
   try {

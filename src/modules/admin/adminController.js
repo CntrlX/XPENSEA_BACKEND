@@ -1,11 +1,8 @@
 const responseHandler = require("../../helpers/responseHandler");
-const Admin = require("../models/adminModel");
-const Role = require("../models/roleModel");
-const Tier = require("../models/tierModel");
-const User = require("../models/userModel");
-const Event = require("../models/eventModel");
-const transaction = require("../models/transactionModel");
-const Policy = require("../models/policyModel");
+const Admin = require("../admin/adminModel");
+const User = require("../user/userModel");
+const Event = require("../event/eventModel");
+const transaction = require("../transaction/transactionModel");
 const mongoose = require("mongoose");
 
 const { hashPassword, comparePasswords } = require("../../utils/bcrypt");
@@ -26,11 +23,10 @@ const {
   updatePlanSchema,
 } = require("../../validations");
 const moment = require("moment-timezone");
-const Report = require("../models/reportModel");
-const Expense = require("../models/expenseModel");
-const Notification = require("../models/notificationModel");
-const Deduction = require("../models/deductionModel");
-const Plan = require("../models/planModel");
+const Report = require("../report/reportModel");
+const Expense = require("../expense/expenseModel");
+const Notification = require("../notification/notificationModel");
+const Deduction = require("../deduction/deductionModel");
 const generateMail = require("../../utils/generateMail");
 const { text } = require("express");
 

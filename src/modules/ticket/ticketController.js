@@ -1,4 +1,4 @@
-const Ticket = require("../models/ticketModel");
+const Ticket = require("../ticket/ticketModel");
 const responseHandler = require("../helpers/responseHandler");
 const { createTicketSchema, updateStatusSchema, addResponseSchema } = require("../validations/index");
 const { checkAccess } = require("../helpers/checkAccess");

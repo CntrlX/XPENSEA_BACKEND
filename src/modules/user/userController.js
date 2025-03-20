@@ -1,10 +1,10 @@
 const moment = require("moment-timezone");
 const responseHandler = require("../../helpers/responseHandler");
 const { sendOtp } = require("../../helpers/sendOtp");
-const Expense = require("../models/expenseModel");
-const Notification = require("../models/notificationModel");
-const Report = require("../models/reportModel");
-const User = require("../models/userModel");
+const Expense = require("../expense/expenseModel");
+const Notification = require("../notification/notificationModel");
+const Report = require("../report/reportModel");
+const User = require("./userModel");
 const { hashPassword, comparePasswords } = require("../../utils/bcrypt");
 const { generateOTP } = require("../../utils/generateOTP");
 const { generateToken } = require("../../utils/generateToken");
@@ -17,23 +17,20 @@ const {
   createTransactionSchema,
   createCompanySchema,
 } = require("../../validations");
-const Problem = require("../models/problemModel");
-const Event = require("../models/eventModel");
+const Problem = require("../problem/problemModel");
+const Event = require("../event/eventModel");
 const mongoose = require("mongoose");
 const runOCR = require("../../jobs/billAnalysis");
 const analyzeImage = require("../../jobs/imageAnalysis");
-const transaction = require("../models/transactionModel");
-const Policy = require("../models/policyModel");
-const Deduction = require("../models/deductionModel");
-const Location = require("../models/locationModel");
+const transaction = require("../transaction/transactionModel");
+const Policy = require("../policy/policyModel");
+const Deduction = require("../deduction/deductionModel");
 const sendMail = require("../../utils/sendMail");
-const Company = require("../models/companyModel");
-const Stripe = require("stripe");
-const Payment = require("../models/paymentModel");
-const stripe = Stripe(process.env.STRIPE_SECRET);
+const Company = require("../company/companyModel");
+const Payment = require("../payment/paymentModel");
 const path = require("path");
 const generateMail = require("../../utils/generateMail");
-const Admin = require("../models/adminModel");
+const Admin = require("../admin/adminModel");
 const { generateRandomPassword } = require("../../utils/generateRandomPassword");
 
 /* The `exports.sendOtp` function is responsible for sending an OTP (One Time Password) to a user's
