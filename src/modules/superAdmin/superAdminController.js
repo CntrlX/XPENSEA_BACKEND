@@ -10,8 +10,8 @@ const {
 } = require("../../validations");
 const { hashPassword, comparePasswords } = require("../../utils/bcrypt");
 const generateMail = require("../../utils/generateMail");
-const Admin = require("../models/adminModel");
-const Transaction = require("../models/transactionModel");
+const Admin = require("../admin/adminModel");
+const Transaction = require("../transaction/transactionModel");
 const { generateToken } = require("../../utils/generateTokenSuperAdmin");
 const { generateOTP } = require("../../utils/generateOTP");
 const Stripe = require("stripe");

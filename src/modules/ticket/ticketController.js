@@ -1,7 +1,7 @@
-const Ticket = require("../ticket/ticketModel");
-const responseHandler = require("../helpers/responseHandler");
-const { createTicketSchema, updateStatusSchema, addResponseSchema } = require("../validations/index");
-const { checkAccess } = require("../helpers/checkAccess");
+const Ticket = require("./ticketModel");
+const responseHandler = require("../../helpers/responseHandler");
+const { createTicketSchema, updateStatusSchema, addResponseSchema } = require("../../validations/index");
+const { checkAccess } = require("../../helpers/checkAccess");
 
 exports.createTicket = async (req, res) => {
   try {

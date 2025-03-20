@@ -1,4 +1,4 @@
-const Role = require("../models/roleModel");
+const Role = require("../modules/role/roleModel");
 
 const checkAccess = async (roleId, access) => {
   const findRole = await Role.findById(roleId);

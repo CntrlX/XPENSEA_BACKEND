@@ -1,6 +1,6 @@
 const cron = require("node-cron");
 const moment = require("moment-timezone");
-const Event = require("../models/eventModel");
+const Event = require("../modules/event/eventModel");
 require("dotenv").config();
 
 cron.schedule("* * * * *", async () => {

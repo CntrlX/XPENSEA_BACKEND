@@ -22,7 +22,7 @@ adminRoute
 
 
 //todo admin list
-adminRoute.get("/list", adminController.listController);
+// adminRoute.get("/list", adminController.listController);
 
 
 
