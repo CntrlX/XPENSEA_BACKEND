@@ -1,0 +1,208 @@
+const responseHandler = require("../../helpers/responseHandler");
+const Department = require("./departmentModel");
+const checkAccess = require("../../helpers/checkAccess");
+
+// Create a new department
+exports.createDepartment = async (req, res) => {
+  try {
+    // Check if user has permission to modify departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    // Add company ID from request
+    req.body.company = req.companyId;
+
+    // Create new department
+    const newDepartment = await Department.create(req.body);
+    if (!newDepartment) {
+      return responseHandler(res, 400, "Department creation failed");
+    }
+
+    return responseHandler(
+      res,
+      201,
+      "Department created successfully",
+      newDepartment
+    );
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Get all departments with pagination and filtering
+exports.getAllDepartments = async (req, res) => {
+  try {
+    // Check if user has permission to view departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_view")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    // Extract query parameters
+    const { pageNo = 1, limit = 10, status, departmentName } = req.query;
+    const skipCount = limit * (pageNo - 1);
+    
+    // Build filter
+    const filter = { company: req.companyId };
+
+    // Add status filter if provided
+    if (status !== undefined) {
+      filter.status = status === "true";
+    }
+
+    // Add departmentName filter if provided
+    if (departmentName) {
+      filter.departmentName = { $regex: departmentName, $options: 'i' };
+    }
+
+    // Count total documents matching filter
+    const totalCount = await Department.countDocuments(filter);
+
+    // Fetch departments with pagination
+    const departments = await Department.find(filter)
+      .populate("departmentManager", "name")
+      .populate("departmentThresholdManager", "name")
+      .skip(skipCount)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!departments || departments.length === 0) {
+      return responseHandler(res, 404, "No departments found");
+    }
+
+    return responseHandler(res, 200, "Departments found", departments, totalCount);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Get department by ID
+exports.getDepartmentById = async (req, res) => {
+  try {
+    // Check if user has permission to view departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_view")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    // Extract ID from request parameters
+    const { id } = req.params;
+    if (!id) {
+      return responseHandler(res, 400, "Department ID is required");
+    }
+
+    // Find department by ID
+    const department = await Department.findById(id)
+      .populate("departmentManager", "name")
+      .populate("departmentThresholdManager", "name")
+      .lean();
+
+    if (!department) {
+      return responseHandler(res, 404, "Department not found");
+    }
+
+    return responseHandler(res, 200, "Department found", department);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Update department
+exports.updateDepartment = async (req, res) => {
+  try {
+    // Check if user has permission to modify departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    // Extract ID from request parameters
+    const { id } = req.params;
+    if (!id) {
+      return responseHandler(res, 400, "Department ID is required");
+    }
+
+    // Find and update department
+    const updatedDepartment = await Department.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true }
+    )
+      .populate("departmentManager", "name")
+      .populate("departmentThresholdManager", "name");
+
+    if (!updatedDepartment) {
+      return responseHandler(res, 404, "Department not found or update failed");
+    }
+
+    return responseHandler(
+      res,
+      200,
+      "Department updated successfully",
+      updatedDepartment
+    );
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Delete department (soft delete)
+exports.deleteDepartment = async (req, res) => {
+  try {
+    // Check if user has permission to modify departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    // Extract ID from request parameters
+    const { id } = req.params;
+    if (!id) {
+      return responseHandler(res, 400, "Department ID is required");
+    }
+
+    // Find department by ID
+    const findDepartment = await Department.findById(id);
+    if (!findDepartment) {
+      return responseHandler(res, 404, "Department not found");
+    }
+
+    // Soft delete the department
+    const deleteDepartment = await Department.findByIdAndUpdate(
+      id,
+      { isDeleted: true, deletedAt: new Date(), status: false },
+      { new: true }
+    );
+
+    if (!deleteDepartment) {
+      return responseHandler(res, 400, "Department deletion failed");
+    }
+
+    return responseHandler(res, 200, "Department deleted successfully");
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+}; 

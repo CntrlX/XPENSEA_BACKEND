@@ -48,6 +48,7 @@ const startServer = async () => {
     const adminRoute = require("./src/modules/admin/adminRoutes");
     const superAdminRoute = require("./src/modules/superAdmin/superAdminRoutes");
     const ticketRoute = require("./src/modules/ticket/ticketRoutes");
+    const departmentRoute = require("./src/modules/department/departmentRoutes");
 
 
     //* Define the PORT & API version based on environment variables
@@ -74,6 +75,7 @@ app.use(
     app.use(`${BASE_PATH}/user`, userRoute);
     app.use(`${BASE_PATH}/superadmin`,superAdminRoute);
     app.use(`${BASE_PATH}/tickets`, ticketRoute);
+    app.use(`${BASE_PATH}/departments`, departmentRoute);
 
 
     //? Define a route for the API root
