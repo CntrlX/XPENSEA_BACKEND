@@ -12,6 +12,11 @@ departmentRoute.post("/", departmentController.createDepartment);
 // Get all departments
 departmentRoute.get("/", departmentController.getAllDepartments);
 
+// Department user management
+departmentRoute.get("/:departmentId/users", departmentController.getDepartmentUsers);
+departmentRoute.post("/:departmentId/users/:userId", departmentController.addUserToDepartment);
+departmentRoute.delete("/:departmentId/users/:userId", departmentController.removeUserFromDepartment);
+
 departmentRoute
   .route("/:id")
   .get(departmentController.getDepartmentById)

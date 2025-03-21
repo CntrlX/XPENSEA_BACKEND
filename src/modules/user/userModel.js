@@ -6,11 +6,6 @@ const userSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
     },
-    department: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
-      required: true,
-    },
     employeeId: { type: String },
     name: { type: String },
     email: { type: String },
@@ -53,31 +48,6 @@ const userSchema = mongoose.Schema(
 );
 
 userSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 2592000 }); // 30 days
-userSchema.index({ department: 1 }); // Add index for department for better query performance
-
-// Validate that user's company matches department's company
-userSchema.pre('save', async function(next) {
-  if (this.isModified('department') || this.isModified('company')) {
-    try {
-      const Department = mongoose.model('Department');
-      const department = await Department.findById(this.department);
-      
-      if (!department) {
-        return next(new Error('Department not found'));
-      }
-      
-      if (department.company && this.company && department.company.toString() !== this.company.toString()) {
-        return next(new Error('Department must belong to the same company as the user'));
-      }
-      
-      next();
-    } catch (error) {
-      next(error);
-    }
-  } else {
-    next();
-  }
-});
 
 const User = mongoose.model("User", userSchema);
 

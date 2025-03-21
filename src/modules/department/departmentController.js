@@ -1,5 +1,6 @@
 const responseHandler = require("../../helpers/responseHandler");
 const Department = require("./departmentModel");
+const User = require("../user/userModel");
 const checkAccess = require("../../helpers/checkAccess");
 
 // Create a new department
@@ -49,7 +50,7 @@ exports.getAllDepartments = async (req, res) => {
     }
 
     // Extract query parameters
-    const { pageNo = 1, limit = 10, status, departmentName } = req.query;
+    const { pageNo = 1, limit = 10, status, departmentName, populateUsers = false } = req.query;
     const skipCount = limit * (pageNo - 1);
     
     // Build filter
@@ -68,10 +69,18 @@ exports.getAllDepartments = async (req, res) => {
     // Count total documents matching filter
     const totalCount = await Department.countDocuments(filter);
 
-    // Fetch departments with pagination
-    const departments = await Department.find(filter)
+    // Build query
+    let query = Department.find(filter)
       .populate("departmentManager", "name")
-      .populate("departmentThresholdManager", "name")
+      .populate("departmentThresholdManager", "name");
+    
+    // Optionally populate users
+    if (populateUsers === "true") {
+      query = query.populate("users", "name email employeeId");
+    }
+
+    // Execute query with pagination
+    const departments = await query
       .skip(skipCount)
       .limit(Number(limit))
       .sort({ createdAt: -1 })
@@ -106,11 +115,20 @@ exports.getDepartmentById = async (req, res) => {
       return responseHandler(res, 400, "Department ID is required");
     }
 
-    // Find department by ID
-    const department = await Department.findById(id)
+    const { populateUsers = false } = req.query;
+
+    // Build query
+    let query = Department.findById(id)
       .populate("departmentManager", "name")
-      .populate("departmentThresholdManager", "name")
-      .lean();
+      .populate("departmentThresholdManager", "name");
+    
+    // Optionally populate users
+    if (populateUsers === "true") {
+      query = query.populate("users", "name email employeeId");
+    }
+    
+    // Find department by ID
+    const department = await query.lean();
 
     if (!department) {
       return responseHandler(res, 404, "Department not found");
@@ -202,6 +220,140 @@ exports.deleteDepartment = async (req, res) => {
     }
 
     return responseHandler(res, 200, "Department deleted successfully");
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Add a user to a department
+exports.addUserToDepartment = async (req, res) => {
+  try {
+    // Check if user has permission to modify departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    const { departmentId, userId } = req.params;
+
+    // Validate input
+    if (!departmentId || !userId) {
+      return responseHandler(res, 400, "Department ID and User ID are required");
+    }
+
+    // Check if department exists
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return responseHandler(res, 404, "Department not found");
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return responseHandler(res, 404, "User not found");
+    }
+
+    // Check if department and user belong to the same company
+    if (department.company.toString() !== user.company.toString()) {
+      return responseHandler(res, 400, "User and department must belong to the same company");
+    }
+
+    // Add user to department
+    await department.addUser(userId);
+
+    return responseHandler(res, 200, "User added to department successfully", department);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Remove a user from a department
+exports.removeUserFromDepartment = async (req, res) => {
+  try {
+    // Check if user has permission to modify departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_modify")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    const { departmentId, userId } = req.params;
+
+    // Validate input
+    if (!departmentId || !userId) {
+      return responseHandler(res, 400, "Department ID and User ID are required");
+    }
+
+    // Check if department exists
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return responseHandler(res, 404, "Department not found");
+    }
+
+    // Check if user exists in department
+    if (!department.hasUser(userId)) {
+      return responseHandler(res, 404, "User not found in this department");
+    }
+
+    // Remove user from department
+    await department.removeUser(userId);
+
+    return responseHandler(res, 200, "User removed from department successfully", department);
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
+
+// Get all users in a department
+exports.getDepartmentUsers = async (req, res) => {
+  try {
+    // Check if user has permission to view departments
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("departmentManagement_view")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    const { departmentId } = req.params;
+    const { pageNo = 1, limit = 10 } = req.query;
+    const skipCount = limit * (pageNo - 1);
+
+    // Validate input
+    if (!departmentId) {
+      return responseHandler(res, 400, "Department ID is required");
+    }
+
+    // Check if department exists
+    const department = await Department.findById(departmentId);
+    if (!department) {
+      return responseHandler(res, 404, "Department not found");
+    }
+
+    // Get total user count
+    const totalCount = department.users.length;
+
+    // Get paginated users with details
+    const users = await User.find({ _id: { $in: department.users } })
+      .select("name email employeeId designation")
+      .skip(skipCount)
+      .limit(Number(limit))
+      .lean();
+
+    if (!users || users.length === 0) {
+      return responseHandler(res, 404, "No users found in this department");
+    }
+
+    return responseHandler(res, 200, "Department users found", users, totalCount);
   } catch (error) {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }
