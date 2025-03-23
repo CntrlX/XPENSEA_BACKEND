@@ -4,6 +4,7 @@ const Expense = require("../expense/expenseModel");
 const Notification = require("../notification/notificationModel");
 const User = require("../user/userModel");
 const Event = require("../event/eventModel");
+const Department = require("../department/departmentModel");
 const moment = require("moment-timezone");
 const { createReportSchema } = require("../validations");
 
@@ -35,10 +36,25 @@ exports.createReport = async (req, res) => {
     // Fetch user and populate tier information
     const user = await User.findOne({ _id: userId }).populate("tier");
 
+    // Function to find a user's department
+    const findUserDepartment = async (userId) => {
+      return await Department.findOne({ 
+        users: { $in: [userId] },
+        company: req.companyId
+      }).populate("departmentThresholdManager");
+    };
+
     // Function to create a new report and send notification
-    const createNewReport = async () => {
+    const createNewReport = async (customApprover = null) => {
       req.body.user = req.userId;
       req.body.company = req.companyId;
+      
+      // If a custom approver is provided, use it instead of the default user approver
+      if (customApprover) {
+        req.body.approverModel = "Admin";
+        req.body.approver = customApprover;
+      }
+      
       const newReport = await Report.create(req.body);
       if (newReport) {
         const data = {
@@ -47,9 +63,11 @@ exports.createReport = async (req, res) => {
           status: newReport.status,
         };
         await Notification.create(data);
+        
+        // Send notification to the appropriate approver
         const approverNotification = {
           content: newReport._id,
-          user: user.approver,
+          user: customApprover || user.approver,
           status: newReport.status,
         };
         await Notification.create(approverNotification);
@@ -150,11 +168,24 @@ exports.createReport = async (req, res) => {
     }
 
     if (existingTotalAmount > user.tier.totalAmount) {
-      return responseHandler(
-        res,
-        400,
-        `The total amount of existing reports within the last 30 days exceeds your tier limit of ${user.tier.totalAmount}.`
+      // Find the user's department instead of returning an error
+      const userDepartment = await findUserDepartment(userId);
+      
+      if (!userDepartment || !userDepartment.departmentThresholdManager) {
+        return responseHandler(
+          res,
+          400,
+          `The total amount of existing reports within the last 30 days exceeds your tier limit of ${user.tier.totalAmount}, and no department threshold manager was found.`
+        );
+      }
+      
+      // Use the department threshold manager as the approver
+      await Expense.updateMany(
+        { _id: { $in: expenseIds } },
+        { status: "mapped" }
       );
+      
+      return await createNewReport(userDepartment.departmentThresholdManager);
     }
 
     await Expense.updateMany(
