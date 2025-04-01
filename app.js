@@ -44,11 +44,20 @@ const startServer = async () => {
     //   await loadSecrets();
     // }
     const { PORT, API_VERSION } = process.env;
-    const userRoute = require("./src/modules/user/userRoutes");
     const adminRoute = require("./src/modules/admin/adminRoutes");
+    const expenseRoute = require("./src/modules/expense/expenseRoutes");
+    const departmentRoute = require("./src/modules/department/departmentRoutes");
+    const locationRoute = require("./src/modules/location/locationRoutes");
+    const planRoute = require("./src/modules/plan/planRoutes");
+    const policyRoute = require("./src/modules/policy/policyRoutes");
+    const reportRoute = require("./src/modules/report/reportRoutes");
+    const roleRoute = require("./src/modules/role/roleRoutes");
     const superAdminRoute = require("./src/modules/superAdmin/superAdminRoutes");
     const ticketRoute = require("./src/modules/ticket/ticketRoutes");
-    const departmentRoute = require("./src/modules/department/departmentRoutes");
+    const tierRoute = require("./src/modules/tier/tierRoutes");
+    const transactionRoute = require("./src/modules/transaction/transactionRoutes");
+    const userRoute = require("./src/modules/user/userRoutes");
+    const walletRoute = require("./src/modules/wallet/walletRoutes");
 
 
     //* Define the PORT & API version based on environment variables
@@ -76,6 +85,15 @@ app.use(
     app.use(`${BASE_PATH}/superadmin`,superAdminRoute);
     app.use(`${BASE_PATH}/tickets`, ticketRoute);
     app.use(`${BASE_PATH}/departments`, departmentRoute);
+    app.use(`${BASE_PATH}/expenses`, expenseRoute);
+    app.use(`${BASE_PATH}/locations`, locationRoute);
+    app.use(`${BASE_PATH}/plans`, planRoute);
+    app.use(`${BASE_PATH}/policies`, policyRoute);
+    app.use(`${BASE_PATH}/reports`, reportRoute);
+    app.use(`${BASE_PATH}/roles`, roleRoute);
+    app.use(`${BASE_PATH}/tiers`, tierRoute);
+    app.use(`${BASE_PATH}/transactions`, transactionRoute);
+    app.use(`${BASE_PATH}/wallets`, walletRoute);
 
 
     //? Define a route for the API root
