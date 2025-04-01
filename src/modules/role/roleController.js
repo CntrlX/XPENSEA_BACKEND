@@ -1,8 +1,8 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const Role = require("../role/roleModel");
 const moment = require("moment-timezone");
-const { createRoleSchema, editRoleSchema } = require("../validations");
-const checkAccess = require("../helpers/checkAccess");
+const { createRoleSchema, editRoleSchema } = require("../../validations");
+const checkAccess = require("../../helpers/checkAccess");
 
 exports.createRole = async (req, res) => {
   try {

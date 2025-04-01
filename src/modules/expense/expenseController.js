@@ -1,7 +1,7 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const Expense = require("../expense/expenseModel");
 const User = require("../user/userModel");
-const runOCR = require("../jobs/billAnalysis");
+const runOCR = require("../../jobs/billAnalysis");
 const{createExpenseSchema} = require("../../validations");
 
 exports.createExpense = async (req, res) => {

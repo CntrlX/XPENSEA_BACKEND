@@ -1,7 +1,7 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const Plan = require("../plan/planModel");
-const checkAccess = require("../helpers/checkAccess");
-const { createPlanSchema, updatePlanSchema } = require("../validations");
+const checkAccess = require("../../helpers/checkAccess");
+const { createPlanSchema, updatePlanSchema } = require("../../validations");
 
 exports.createPlan = async (req, res) => {
   try {

@@ -1,8 +1,8 @@
-const responseHandler = require("../helpers/responseHandler");
-const Tier = require("../tier/tierModel");
+const responseHandler = require("../../helpers/responseHandler");
+const Tier = require("../tier/tierModel");  
 const moment = require("moment-timezone");
-const { createTierSchema, editTierSchema } = require("../validations");
-const checkAccess = require("../helpers/checkAccess");
+const { createTierSchema, editTierSchema } = require("../../validations");
+const checkAccess = require("../../helpers/checkAccess");
 
 exports.createTier = async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const Location = require("../location/locationModel");
 
 exports.saveLocation = async (req, res) => {

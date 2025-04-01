@@ -1,4 +1,4 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const transaction = require("../transaction/transactionModel");
 const Deduction = require("../deduction/deductionModel");
 const User = require("../user/userModel");
@@ -6,7 +6,7 @@ const Expense = require("../expense/expenseModel");
 const Report = require("../report/reportModel");
 const mongoose = require("mongoose");
 const moment = require("moment-timezone");
-const { createTransactionSchema } = require("../validations");
+const { createTransactionSchema } = require("../../validations");
 
 exports.createtransaction = async (req, res) => {
   try {

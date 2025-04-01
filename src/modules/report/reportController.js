@@ -1,4 +1,4 @@
-const responseHandler = require("../helpers/responseHandler");
+const responseHandler = require("../../helpers/responseHandler");
 const Report = require("./reportModel");
 const Expense = require("../expense/expenseModel");
 const Notification = require("../notification/notificationModel");
@@ -6,7 +6,7 @@ const User = require("../user/userModel");
 const Event = require("../event/eventModel");
 const Department = require("../department/departmentModel");
 const moment = require("moment-timezone");
-const { createReportSchema } = require("../validations");
+const { createReportSchema } = require("../../validations");
 
 exports.createReport = async (req, res) => {
   try {
