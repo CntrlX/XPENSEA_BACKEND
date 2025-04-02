@@ -19,10 +19,10 @@ adminRoute
   .get(adminController.getAdminById)
   .delete(adminController.deleteAdmin);
 
-
+adminRoute.get("/list/admins", adminController.listAdmins);
 
 //todo admin list
-// adminRoute.get("/list", adminController.listController);
+adminRoute.get("/list", adminController.listController);
 
 
 

@@ -2,9 +2,7 @@ const mongoose = require("mongoose");
 
 const departmentSchema = mongoose.Schema(
   {
-    department: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
+    
     departmentName: { 
       type: String 
     },

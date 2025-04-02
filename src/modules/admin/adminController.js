@@ -1322,3 +1322,64 @@ exports.deductWallet = async (req, res) => {
     return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
   }
 };
+
+exports.listAdmins = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    const check = await checkAccess(req.roleId, "permissions");
+    if (!check || !check.includes("adminManagement_view")) {
+      return responseHandler(
+        res,
+        403,
+        "You don't have permission to perform this action"
+      );
+    }
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Build query
+    const query = {
+      company: req.companyId,
+      isDeleted: false
+    };
+
+    // Get total count for pagination
+    const total = await Admin.countDocuments(query);
+
+    // Fetch admins with pagination
+    const admins = await Admin.find(query)
+      .select("-password")
+      .populate("role", "permissions")
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Format the response data
+    const mappedData = admins.map((admin) => ({
+      _id: admin._id,
+      name: admin.name,
+      email: admin.email,
+      mobile: admin.mobile,
+      designation: admin.designation,
+      status: admin.status,
+      role: admin.role,
+      isVerified: admin.isVerified,
+      createdAt: moment(admin.createdAt).format("MMM DD YYYY"),
+      updatedAt: moment(admin.updatedAt).format("MMM DD YYYY")
+    }));
+
+    return responseHandler(res, 200, "Admins retrieved successfully", {
+      admins: mappedData,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error: ${error.message}`);
+  }
+};
