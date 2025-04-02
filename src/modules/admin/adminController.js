@@ -294,6 +294,324 @@ exports.getAdminById = async (req, res) => {
   }
 };
 
+
+
+exports.listController = async (req, res) => {
+  try {
+    const { type, pageNo = 1, status } = req.query;
+    const skipCount = 10 * (pageNo - 1);
+    const filter = {
+      user: req.userId,
+    };
+
+    if (type !== "notifications") {
+      filter.company = req.companyId;
+    }
+
+    if (type === "reports") {
+      try {
+        // Count total number of documents
+        const totalCount = await Report.countDocuments(filter);
+
+        // Fetch reports with expenses populated
+        const fetchReports = await Report.find(filter)
+          .populate({
+            path: "expenses",
+            select: "amount",
+          })
+          .skip(skipCount)
+          .limit(10)
+          .sort({ createdAt: -1 })
+          .lean();
+
+        // Check if reports were found
+        if (!fetchReports || fetchReports.length === 0) {
+          return responseHandler(res, 200, "No Reports found", [], totalCount);
+        }
+
+        // Use Promise.all to handle async map operations
+        const mappedData = await Promise.all(
+          fetchReports.map(async (item) => {
+            if (!item) {
+              throw new Error("Report item is undefined.");
+            }
+
+            let isEvent = false;
+            let eventType = null;
+
+            // Check if there's an associated event
+            if (item.event) {
+              const eventDetails = await Event.findOne({ _id: item.event });
+              if (eventDetails) {
+                eventType = eventDetails.type;
+              }
+              isEvent = true;
+            }
+
+            // Calculate the total expense amount
+            const totalAmount = item.expenses.reduce(
+              (acc, exp) => acc + exp.amount,
+              0
+            );
+
+            // Return the processed data for each report
+            return {
+              _id: item._id,
+              title: item.title,
+              status: item.status,
+              isEvent: isEvent,
+              eventType: eventType,
+              totalAmount,
+              expenseCount: item.expenses.length,
+              date: moment(item.reportDate).format("MMM DD YYYY"),
+            };
+          })
+        );
+
+        // Return the response with the processed data and total count
+        return responseHandler(
+          res,
+          200,
+          "Reports found",
+          mappedData,
+          totalCount
+        );
+      } catch (error) {
+        console.error("Error fetching reports:", error.message);
+        return responseHandler(res, 500, "Internal Server Error", [
+          error.message,
+        ]);
+      }
+    } else if (type === "expenses") {
+      const totalCount = await Expense.countDocuments(filter);
+      const fetchExpenses = await Expense.find(filter)
+        .skip(skipCount)
+        .limit(10)
+        .sort({ createdAt: -1 })
+        .lean();
+      if (!fetchExpenses || fetchExpenses.length === 0) {
+        return responseHandler(res, 200, "No Expenses found", []);
+      }
+
+      const mappedData = fetchExpenses.map((item) => {
+        return {
+          _id: item._id,
+          title: item.title,
+          status: item.status,
+          amount: item.amount,
+          category: item.category,
+          description: item.description,
+          image: item.image,
+          date: moment(item.createdAt).format("MMM DD YYYY"),
+        };
+      });
+
+      return responseHandler(
+        res,
+        200,
+        "Expenses found",
+        mappedData,
+        totalCount
+      );
+    } else if (type === "notifications") {
+      filter.isRead = false;
+      const totalCount = await Notification.countDocuments(filter);
+      const fetchNotifications = await Notification.find(filter)
+        .populate("content", "title reportId")
+        .populate({
+          path: "content",
+          populate: {
+            path: "expenses",
+            select: "amount",
+          },
+        })
+        .skip(skipCount)
+        .limit(10)
+        .sort({ createdAt: -1 })
+        .lean();
+      if (!fetchNotifications || fetchNotifications.length === 0) {
+        return responseHandler(res, 200, "No Notifications found", []);
+      }
+
+      await Notification.updateMany(filter);
+
+      // const mappedData = fetchNotifications.map((item) => {
+      //   const totalAmount = item.content.expenses.reduce(
+      //     (acc, exp) => acc + exp.amount,
+      //     0
+      //   );
+      //   return {
+      //     _id: item._id,
+      //     title: item.content.title,
+      //     status: item.status,
+      //     totalAmount,
+      //     expenseCount: item.content.expenses.length,
+      //     date: moment(item.createdAt).format("MMM DD YYYY"),
+      //   };
+      // });
+
+      return responseHandler(
+        res,
+        200,
+        "Notifications found",
+        fetchNotifications,
+        totalCount
+      );
+    } else if (type === "events") {
+      const query = {
+        staffs: { $in: [req.userId] },
+      };
+      if (status) {
+        query.status = status;
+      }
+      const totalCount = await Event.countDocuments(query);
+      const fetchEvents = await Event.find(query)
+        .skip(skipCount)
+        .limit(10)
+        .sort({ createdAt: -1 })
+        .lean();
+      if (!fetchEvents || fetchEvents.length === 0) {
+        return responseHandler(res, 200, "No Event found", []);
+      }
+
+      const mappedData = fetchEvents.map((item) => {
+        return {
+          _id: item._id,
+          eventName: item.eventName,
+          startDate: moment(item.startDate).format("YYYY MM DD"),
+          endDate: moment(item.endDate).format("YYYY MM DD"),
+          startTime: moment(item.startTime).format("hh:mm A"),
+          endTime: moment(item.endTime).format("hh:mm A"),
+          description: item.description,
+          location: item.location,
+          status: item.status,
+          type: item.type,
+        };
+      });
+
+      return responseHandler(
+        res,
+        200,
+        "Expenses found",
+        mappedData,
+        totalCount
+      );
+    } else if (type === "approvals") {
+      const user = await User.findById(req.userId).populate("tier");
+
+      if (!user) {
+        return responseHandler(res, 404, "User not found");
+      }
+
+      if (user.userType !== "approver") {
+        return responseHandler(
+          res,
+          404,
+          "You don't have permission to perform this action"
+        );
+      }
+
+      const result = await Report.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "userDetails",
+          },
+        },
+        { $unwind: "$userDetails" },
+        {
+          $lookup: {
+            from: "expenses",
+            localField: "expenses",
+            foreignField: "_id",
+            as: "expenseDetails",
+          },
+        },
+        {
+          $lookup: {
+            from: "tiers",
+            localField: "userDetails.tier",
+            foreignField: "_id",
+            as: "tierDetails",
+          },
+        },
+        { $unwind: "$tierDetails" },
+        {
+          $match: {
+            "userDetails.approver": new mongoose.Types.ObjectId(req.userId),
+          },
+        },
+        {
+          $addFields: {
+            totalAmount: {
+              $reduce: {
+                input: "$expenseDetails",
+                initialValue: 0,
+                in: { $add: ["$$value", "$$this.amount"] },
+              },
+            },
+            expenseCount: { $size: "$expenseDetails" },
+            formattedDate: {
+              $dateToString: { format: "%b %d %Y", date: "$reportDate" },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            status: 1,
+            totalAmount: 1,
+            expenseCount: 1,
+            date: "$formattedDate",
+          },
+        },
+        {
+          $facet: {
+            reports: [
+              { $skip: skipCount },
+              { $limit: 10 },
+              { $sort: { createdAt: -1 } },
+            ],
+            totalCount: [{ $count: "count" }],
+          },
+        },
+      ]);
+
+      if (!result || result[0].reports.length === 0) {
+        return responseHandler(res, 200, "No Reports found", []);
+      }
+
+      const mappedData = result[0].reports.map((item) => {
+        return {
+          _id: item._id,
+          title: item.title,
+          status: item.status,
+          totalAmount: item.totalAmount,
+          expenseCount: item.expenseCount,
+          date: item.date,
+        };
+      });
+
+      const totalCount = result[0].totalCount[0]
+        ? result[0].totalCount[0].count
+        : 0;
+      return responseHandler(
+        res,
+        200,
+        "Approvals found",
+        mappedData,
+        totalCount
+      );
+    } else {
+      return responseHandler(res, 404, "Invalid type..!");
+    }
+  } catch (error) {
+    return responseHandler(res, 500, `Internal Server Error ${error.message}`);
+  }
+};
 /* The above code is a JavaScript function that is used to create a new user. Here is a breakdown of
 what the code is doing: */
 exports.createUser = async (req, res) => {
