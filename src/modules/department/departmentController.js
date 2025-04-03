@@ -16,8 +16,14 @@ exports.createDepartment = async (req, res) => {
       );
     }
 
-    // Add company ID from request
-    req.body.company = req.companyId;
+    // Get user and their company
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return responseHandler(res, 404, "User not found");
+    }
+
+    // Add company ID from user
+    req.body.company = user.company;
 
     // Create new department
     const newDepartment = await Department.create(req.body);
@@ -49,12 +55,18 @@ exports.getAllDepartments = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     // Extract query parameters
     const { pageNo = 1, limit = 10, status, departmentName, populateUsers = false } = req.query;
     const skipCount = limit * (pageNo - 1);
     
-    // Build filter
-    const filter = { company: req.companyId };
+    // Build filter using user's company
+    const filter = { company: user.company };
 
     // Add status filter if provided
     if (status !== undefined) {
@@ -109,6 +121,12 @@ exports.getDepartmentById = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     // Extract ID from request parameters
     const { id } = req.params;
     if (!id) {
@@ -117,8 +135,8 @@ exports.getDepartmentById = async (req, res) => {
 
     const { populateUsers = false } = req.query;
 
-    // Build query
-    let query = Department.findById(id)
+    // Build query with company check
+    let query = Department.findOne({ _id: id, company: user.company })
       .populate("departmentManager", "name")
       .populate("departmentThresholdManager", "name");
     
@@ -153,15 +171,21 @@ exports.updateDepartment = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     // Extract ID from request parameters
     const { id } = req.params;
     if (!id) {
       return responseHandler(res, 400, "Department ID is required");
     }
 
-    // Find and update department
-    const updatedDepartment = await Department.findByIdAndUpdate(
-      id,
+    // Find and update department with company check
+    const updatedDepartment = await Department.findOneAndUpdate(
+      { _id: id, company: user.company },
       req.body,
       { new: true }
     )
@@ -196,14 +220,20 @@ exports.deleteDepartment = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     // Extract ID from request parameters
     const { id } = req.params;
     if (!id) {
       return responseHandler(res, 400, "Department ID is required");
     }
 
-    // Find department by ID
-    const findDepartment = await Department.findById(id);
+    // Find department by ID with company check
+    const findDepartment = await Department.findOne({ _id: id, company: user.company });
     if (!findDepartment) {
       return responseHandler(res, 404, "Department not found");
     }
@@ -238,6 +268,12 @@ exports.addUserToDepartment = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const requestingUser = await User.findById(req.userId);
+    if (!requestingUser) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     const { departmentId, userId } = req.params;
 
     // Validate input
@@ -245,21 +281,22 @@ exports.addUserToDepartment = async (req, res) => {
       return responseHandler(res, 400, "Department ID and User ID are required");
     }
 
-    // Check if department exists
-    const department = await Department.findById(departmentId);
+    // Check if department exists and belongs to user's company
+    const department = await Department.findOne({ 
+      _id: departmentId, 
+      company: requestingUser.company 
+    });
     if (!department) {
       return responseHandler(res, 404, "Department not found");
     }
 
-    // Check if user exists
-    const user = await User.findById(userId);
+    // Check if user exists and belongs to same company
+    const user = await User.findOne({ 
+      _id: userId, 
+      company: requestingUser.company 
+    });
     if (!user) {
       return responseHandler(res, 404, "User not found");
-    }
-
-    // Check if department and user belong to the same company
-    if (department.company.toString() !== user.company.toString()) {
-      return responseHandler(res, 400, "User and department must belong to the same company");
     }
 
     // Add user to department
@@ -284,6 +321,12 @@ exports.removeUserFromDepartment = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const requestingUser = await User.findById(req.userId);
+    if (!requestingUser) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     const { departmentId, userId } = req.params;
 
     // Validate input
@@ -291,8 +334,11 @@ exports.removeUserFromDepartment = async (req, res) => {
       return responseHandler(res, 400, "Department ID and User ID are required");
     }
 
-    // Check if department exists
-    const department = await Department.findById(departmentId);
+    // Check if department exists and belongs to user's company
+    const department = await Department.findOne({ 
+      _id: departmentId, 
+      company: requestingUser.company 
+    });
     if (!department) {
       return responseHandler(res, 404, "Department not found");
     }
@@ -324,6 +370,12 @@ exports.getDepartmentUsers = async (req, res) => {
       );
     }
 
+    // Get user and their company
+    const requestingUser = await User.findById(req.userId);
+    if (!requestingUser) {
+      return responseHandler(res, 404, "User not found");
+    }
+
     const { departmentId } = req.params;
     const { pageNo = 1, limit = 10 } = req.query;
     const skipCount = limit * (pageNo - 1);
@@ -333,8 +385,11 @@ exports.getDepartmentUsers = async (req, res) => {
       return responseHandler(res, 400, "Department ID is required");
     }
 
-    // Check if department exists
-    const department = await Department.findById(departmentId);
+    // Check if department exists and belongs to user's company
+    const department = await Department.findOne({ 
+      _id: departmentId, 
+      company: requestingUser.company 
+    });
     if (!department) {
       return responseHandler(res, 404, "Department not found");
     }
@@ -343,7 +398,10 @@ exports.getDepartmentUsers = async (req, res) => {
     const totalCount = department.users.length;
 
     // Get paginated users with details
-    const users = await User.find({ _id: { $in: department.users } })
+    const users = await User.find({ 
+      _id: { $in: department.users },
+      company: requestingUser.company
+    })
       .select("name email employeeId designation")
       .skip(skipCount)
       .limit(Number(limit))
