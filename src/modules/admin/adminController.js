@@ -301,7 +301,7 @@ exports.listController = async (req, res) => {
     const { type, pageNo = 1, status } = req.query;
     const skipCount = 10 * (pageNo - 1);
     const filter = {
-      user: req.userId,
+      Admin: req.userId,
     };
 
     if (type !== "notifications") {
